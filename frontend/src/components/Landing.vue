@@ -28,7 +28,6 @@ export default {
     },
     data(){ //store & manage reactive data
         return{
-            documents: []
         }
     },
     async created(){

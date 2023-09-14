@@ -38,11 +38,6 @@ div(v-if="showModal")
                     type='button',
                     @click='closeModal'
                 ) Close
-                //- button.btn.btn-primary(
-                //-     type='button'
-                //-     @click=''
-                //- ) Save changes
-
 </template>
 
 <script>
