@@ -5,14 +5,12 @@
 <template lang="pug">
 div
   div(v-if='documents && documents.length > 0')
-    mDocumentPopout.modal-fade(role="dialog")
     h3.form-label PDF List
     ul.list-group.container
         li(v-for="document in documents" 
           :key="document._id"
           :class="{ 'list-group-item': true, 'active': isActive(document) }"
         )
-          a(:href="document._id" target="#")
           div.text-center.row
               div.d-flex.align-items.justify-content-between.col
                     a(@click.prevent="openModal(document)")
@@ -23,6 +21,7 @@ div
                   type="button"
                   @click="confirmDelete(document._id, document.title)"
                 ) Delete
+        mDocumentPopout.modal-fade(role="dialog" :documentId="selectedId")
 </template>
 
 <script>
@@ -44,9 +43,11 @@ export default {
   },
   methods:{
     ...mapActions(['deleteDocument','toggleModal','setPdfSrc', 'fetchDocumentById']),
+    
     isActive(document){
         return document && document?._id === this.selectedId
     },
+    
     async confirmDelete(documentId, documentTitle){
       const willDelete = window.confirm(`Confirm you would like to delete ${documentTitle}` )
       
@@ -54,13 +55,17 @@ export default {
         await this.deleteDocument(documentId)
       }
     },
-    
+
     async openModal(document){
       await this.fetchDocumentById(document._id)
-      console.log(`the current pdfSrc state: ${this.$store.state.pdfSrc}`)
-      
+      //this.setActiveDocument(document)
       this.toggleModal(true)
-      console.log(`the current toggleModal state: ${this.$store.state.showModal}`)
+    },
+    
+    setActiveDocument(document){
+      this.selectedId = document?._id
+      this.$store.commit('setCurrentDocument', document)
+      this.$store.commit('setPdfSrc', document.pdfSrc)
     }
   },
   watch:{

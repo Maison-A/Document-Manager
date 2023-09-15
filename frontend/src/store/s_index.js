@@ -9,10 +9,14 @@ export default createStore({
     documents: [],
     showModal: false,
     pdfSrc: '',
-    categories: ['signatures', 'supporting documents'] // TODO dynamically allocate
+    categories: ['signatures', 'supporting documents'], // TODO dynamically allocate,
+    currentDocument:{},
   },
   getters: {
     // getters
+    getCurrentDocument(state){
+      return state.currentDocument
+    }
   },
   mutations: {
     addDocument(state,document){
@@ -33,7 +37,11 @@ export default createStore({
     
     setPdfSrc(state, payload){
       state.pdfSrc = payload
-    }
+    },
+    
+    setCurrentDocument(state, document) {
+      state.currentDocument = document
+    },
   },
   actions: {
     /**
@@ -81,7 +89,9 @@ export default createStore({
     async fetchDocumentById({commit}, documentId){
       try{
         const res = await axios.get(`docs/display/${documentId}`)
+        
         commit('setPdfSrc', `http://localhost:3000${res.data.fileUrl}`)
+        //commit('setCurrentDocument', res.data.document)
       }catch(e){
         console.log(`Error fetching document by id ${e}`)
       }
@@ -89,24 +99,25 @@ export default createStore({
   
   
   /**
-   * Name: 
+   * Name: updateDocument
    * Desc: 
    * @param {}  - 
    * @returns {}  - 
   */
     async updateDocument({ commit }, { documentId, updateData, file }) {
       try {
-        const formData = new FormData();
+        const formData = new FormData()
         Object.keys(updateData).forEach(key => {
-          formData.append(key, updateData[key]);
-        });
+          formData.append(key, updateData[key])
+        })
         if(file) {
-          formData.append('file', file);
+          formData.append('file', file)
         }
         
-        const response = await axios.post(`/docs/update/${documentId}`, formData);
+        const response = await axios.post(`/docs/update/${documentId}`, formData)
+        
         if (response.data.message.includes('updated successfully')) {
-          commit('setDocuments', response.data.updatedDocument) // Update Vuex state with the new document data
+          commit('setDocuments', response.data.updatedDocument) // update state with the new document data
           this.dispatch('fetchAllDocuments') // hard reload to ensure data consistency
         }
       } catch (e) {
@@ -116,7 +127,7 @@ export default createStore({
 
 
   /**
-   * Name: 
+   * Name: deleteDocument
    * Desc: 
    * @param {}  - 
    * @returns {}  - 

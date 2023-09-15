@@ -136,9 +136,9 @@ router.post('/update/:id', upload.single('file'), async (req, res) => {
   try {
     const docId = req.params.id
     const updateData = req.body
-
-    // Step 1: Update the database record
-    let updatedDocument = await Document.findByIdAndUpdate(docId, updateData, { new: true })
+    log(`update data is: ${updateData}`)
+    let updatedDocument = await Document.findByIdAndUpdate(docId, updateData, { new: true }) // update db record
+    
     if (!updatedDocument) {
       return res.status(404).json({ error: 'Document not found' })
     }

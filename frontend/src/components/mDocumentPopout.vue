@@ -1,31 +1,22 @@
 <template lang="pug">
-div(v-if="showModal")
-    div
-        button.btn.btn-primary(
-            type='button',
-            @click='openModal'
-        ) Launch demo modal
-
-    div.modal.fade.show.d-block(
-        v-if="showModal", 
-        id='docDisplay', 
-        tabindex='-1', 
-        role='dialog', 
-        aria-labelledby='docDisplayLabel', 
-        aria-hidden='false'
-    )
-      div.modal-dialog.modal-lg(role='document')
+div.modal.fade.show.d-block(
+    v-if="showModal", 
+    id='docDisplay', 
+    tabindex='-1', 
+    role='dialog',
+    aria-labelledby='docDisplayLabel', 
+    aria-hidden='false'
+)
+    div.modal-dialog.modal-lg.border.border.primary.rounded(role='document')
         div.modal-content
-            h5.modal-title.m-3(id='docDisplayLabel') View & Update
+            h5.modal-title.m-3(id='docDisplayLabel') {{ currentTitle }}
                 button(
                     type='button', 
                     class='close', 
                     @click='closeModal', 
                     aria-label='Close'
                 )
-                    span(
-                        aria-hidden='true'
-                    ) &times;
+                    span(aria-hidden='true') &times;
             div.modal-body
                 vue-pdf-embed(
                     :source="pdfSrc" 
@@ -33,11 +24,33 @@ div(v-if="showModal")
                     height="500"
                 )
             div.modal-footer
-                UpdateForm()
-                button.btn.btn-secondary(
-                    type='button',
-                    @click='closeModal'
-                ) Close
+            form    
+                div.row.mb-3
+                    div.col
+                        label(for="updateTitleInput") Update Document Title
+                        input.form-control(
+                            v-model="updateData.title",
+                            id="updateTitleInput",
+                            :placeholder="currentTitle"
+                        )
+                    div.col
+                            label(for="updateDescriptionInput") Update Document Description
+                            input.form-control(
+                                v-model="updateData.description",
+                                id="updateDescriptionInput",
+                                :placeholder="currentDescription"
+                            )
+                div.row.mb-3
+                    div.col
+                        button.btn.btn-secondary(
+                            type='button',
+                            @click='closeModal'
+                        ) Close
+                    div.col
+                        button.btn.btn-primary(
+                            type='button'
+                            @click='updateDocument'
+                        ) Save Changes
 </template>
 
 <script>
@@ -45,30 +58,63 @@ import VuePdfEmbed from 'vue-pdf-embed'
 import UpdateForm from './UpdateForm.vue'
 export default {
     name: 'DocumentPopout',
+    props: {
+        documentId:{
+            type: String,
+            default: null
+        },
+    },
     components:{ 
         VuePdfEmbed,
         UpdateForm
      },
-    data(){
-        return{
-        
-    }},
+     data() {
+        return {
+            updateData: {
+                title: '',
+                description: ''
+            }
+        }
+    },
     computed: {
         showModal(){
             return this.$store.state.showModal
         },
         pdfSrc(){
             return this.$store.state.pdfSrc
+        },
+        currentDocument(){
+            return this.$store.getters.getCurrentDocument
+        },
+        currentTitle(){
+            return this.currentDocument ? this.currentDocument.title : 'undefined'
+        },
+        currentDescription(){
+            return this.currentDocument ? this.currentDocument.description : 'undefined'
         }
     },
     methods: {
-        openModal(){
-            this.$store.commit('toggleModal', true)
-        },
         closeModal(){
             this.$store.commit('toggleModal', false)
-        }
-    }
+        },
+        updateDocument() {
+            if(this.updateData.title || this.updateData.description) {
+                this.$store.dispatch('updateDocument', { 
+                documentId: this.currentDocument._id, 
+                updateData: this.updateData
+                })
+            } else {
+                console.log('No changes made')
+            }
+        },
+        created() {
+            if(this.documentId) {
+                this.$store.dispatch('fetchDocumentById', this.documentId)
+            }
+        },
+
+    },
+
 }
 </script>
 
