@@ -9,7 +9,7 @@ export default createStore({
     documents: [],
     showModal: false,
     pdfSrc: '',
-    categories: ['signatures', 'supporting documents'], // TODO dynamically allocate,
+    categories: ['signatures', 'supporting documents'],
     currentDocument:{},
   },
   getters: {
@@ -45,7 +45,7 @@ export default createStore({
   },
   actions: {
     /**
-     * Name: 
+     * Name: fetchAllDocuments
      * Desc: 
      * @param {}  - 
      * @returns {}  - 
@@ -61,8 +61,9 @@ export default createStore({
     },
     
     
+    
   /**
-   * Name: 
+   * Name: createAndStoreDocument
    * Desc: 
    * @param {}  - 
    * @returns {}  - 
@@ -80,8 +81,9 @@ export default createStore({
     },
     
     
+    
   /**
-   * Name: 
+   * Name: fetchDocumentById
    * Desc: 
    * @param {}  - 
    * @returns {}  - 
@@ -91,13 +93,16 @@ export default createStore({
         const res = await axios.get(`docs/display/${documentId}`)
         
         commit('setPdfSrc', `http://localhost:3000${res.data.fileUrl}`)
-        //commit('setCurrentDocument', res.data.document)
+        console.log(`response data: ${res.data.document}`)
+        commit('setCurrentDocument', res.data.document)
+        
       }catch(e){
         console.log(`Error fetching document by id ${e}`)
       }
     },
   
   
+    
   /**
    * Name: updateDocument
    * Desc: 

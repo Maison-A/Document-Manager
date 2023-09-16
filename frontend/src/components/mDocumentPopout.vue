@@ -55,20 +55,20 @@ div.modal.fade.show.d-block(
 
 <script>
 import VuePdfEmbed from 'vue-pdf-embed'
-import UpdateForm from './UpdateForm.vue'
+
 export default {
     name: 'DocumentPopout',
     props: {
         documentId:{
             type: String,
-            default: null
+            default: 'no-document-id-passed'
         },
     },
     components:{ 
         VuePdfEmbed,
-        UpdateForm
      },
-     data() {
+     
+    data() {
         return {
             updateData: {
                 title: '',
@@ -76,6 +76,15 @@ export default {
             }
         }
     },
+    
+    watch: {
+        documentId(newVal) {
+            if(newVal) {
+                this.$store.dispatch('fetchDocumentById', newVal)
+            }
+        }
+    },
+
     computed: {
         showModal(){
             return this.$store.state.showModal
@@ -87,12 +96,16 @@ export default {
             return this.$store.getters.getCurrentDocument
         },
         currentTitle(){
-            return this.currentDocument ? this.currentDocument.title : 'undefined'
+            console.log('Current Title: ', this.currentDocument?.title)
+            return this.currentDocument ? this.currentDocument.title : 'Message'
         },
         currentDescription(){
-            return this.currentDocument ? this.currentDocument.description : 'undefined'
+            console.log('Current Description: ', this.currentDocument?.description)
+            return this.currentDocument ? this.currentDocument.description : 'Message'
         }
+
     },
+    
     methods: {
         closeModal(){
             this.$store.commit('toggleModal', false)
@@ -107,12 +120,14 @@ export default {
                 console.log('No changes made')
             }
         },
-        created() {
-            if(this.documentId) {
-                this.$store.dispatch('fetchDocumentById', this.documentId)
-            }
-        },
-
+    },
+    created() {
+        if(this.documentId) {
+            console.log('Document ID: ', this.documentId)
+            this.$store.dispatch('fetchDocumentById', this.documentId).then(() => {
+                console.log('Current Document:', this.$store.getters.getCurrentDocument)
+            })
+        }
     },
 
 }

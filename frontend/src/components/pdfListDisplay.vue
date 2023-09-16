@@ -57,9 +57,14 @@ export default {
     },
 
     async openModal(document){
-      await this.fetchDocumentById(document._id)
-      //this.setActiveDocument(document)
-      this.toggleModal(true)
+      try{
+        await this.fetchDocumentById(document._id)
+        await this.setActiveDocument(document)
+        await this.toggleModal(true)
+      }catch(e){
+        console.log(`ERROR in openModal(document): ${e}`)
+        throw e
+      }
     },
     
     setActiveDocument(document){
