@@ -73,7 +73,8 @@ export default {
             updateData: {
                 title: '',
                 description: ''
-            }
+            },
+            isDataLoaded: false,
         }
     },
     
@@ -97,7 +98,7 @@ export default {
         },
         currentTitle(){
             console.log('Current Title: ', this.currentDocument?.title)
-            return this.currentDocument ? this.currentDocument.title : 'Message'
+            return this.currentDocument ? this.currentDocument.title  : 'Message'
         },
         currentDescription(){
             console.log('Current Description: ', this.currentDocument?.description)
@@ -122,10 +123,12 @@ export default {
         },
     },
     created() {
+        
         if(this.documentId) {
             console.log('Document ID: ', this.documentId)
             this.$store.dispatch('fetchDocumentById', this.documentId).then(() => {
                 console.log('Current Document:', this.$store.getters.getCurrentDocument)
+                this.isDataLoaded = true  // set isDataLoaded to true once data is fetched
             })
         }
     },

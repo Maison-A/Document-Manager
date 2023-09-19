@@ -112,8 +112,11 @@ router.get('/display/:id', async (req, res) => {
       const fileUrl = `/Docs/${dirCategory}/${docToDisplay.title}`
       
       log(`file exists! file path: ${filePath}`)
-      
-      res.json({fileUrl})
+      res.json({
+        fileUrl,
+        title: docToDisplay.title,
+        description: docToDisplay.description // assuming you have a description field
+      })
     } else {
       res.status(404).send({ message: 'Document not found' })
     }

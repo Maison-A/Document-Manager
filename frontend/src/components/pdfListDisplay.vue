@@ -42,7 +42,7 @@ export default {
     }
   },
   methods:{
-    ...mapActions(['deleteDocument','toggleModal','setPdfSrc', 'fetchDocumentById']),
+    ...mapActions(['fetchAllDocuments','deleteDocument','toggleModal','setPdfSrc', 'fetchDocumentById',]),
     
     isActive(document){
         return document && document?._id === this.selectedId
@@ -53,34 +53,51 @@ export default {
       
       if(willDelete){
         await this.deleteDocument(documentId)
+        await this.fetchAllDocuments() // hard reload all docs
       }
     },
-
-    async openModal(document){
-      try{
-        await this.fetchDocumentById(document._id)
-        await this.setActiveDocument(document)
-        await this.toggleModal(true)
-      }catch(e){
+    
+    async openModal(document) {
+      try {
+        const fetchedDocument = await this.fetchDocumentById(document._id)
+        
+        if(fetchedDocument) {
+          await this.setActiveDocument(fetchedDocument)
+          await this.toggleModal(true)
+        }
+      } catch(e) {
         console.log(`ERROR in openModal(document): ${e}`)
         throw e
       }
     },
     
     setActiveDocument(document){
+      console.log(JSON.stringify(document, null,2))
+      console.log(`Document in setActiveDocument:${document}`)
       this.selectedId = document?._id
       this.$store.commit('setCurrentDocument', document)
       this.$store.commit('setPdfSrc', document.pdfSrc)
     }
   },
-  watch:{
-    '$store.state.pdfSrc':{ // watcher for pdfSrc changes
-      handler: function(newVal, oldVal){
-        console.log(`pdfSrc has changed to: ${newVal}`)
-      },
-      deep: true
-    }
-  }
+    // async openModal(document){
+    //   try{
+    //     await this.fetchDocumentById(document._id)
+    //     await this.setActiveDocument(document)
+    //     await this.toggleModal(true)
+    //   }catch(e){
+    //     console.log(`ERROR in openModal(document): ${e}`)
+    //     throw e
+    //   }
+    // },
+
+  // watch:{
+  //   '$store.state.pdfSrc':{ // watcher for pdfSrc changes
+  //     handler: function(newVal, oldVal){
+  //       console.log(`pdfSrc has changed to: ${newVal}`)
+  //     },
+  //     deep: true
+  //   }
+  // }
 }
 </script>
 

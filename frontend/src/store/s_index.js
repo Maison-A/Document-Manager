@@ -91,10 +91,15 @@ export default createStore({
     async fetchDocumentById({commit}, documentId){
       try{
         const res = await axios.get(`docs/display/${documentId}`)
+        log(`response fileUrl: ${res.data.fileUrl}`)
         
         commit('setPdfSrc', `http://localhost:3000${res.data.fileUrl}`)
-        console.log(`response data: ${res.data.document}`)
-        commit('setCurrentDocument', res.data.document)
+        log(`response-data-document: ${res.data}`)
+        log(`response-data: ${res.data}`)
+        
+        commit('setCurrentDocument', res.data)
+        log(`Current Document Now Set: ${res.data}`)
+        return res.data
         
       }catch(e){
         console.log(`Error fetching document by id ${e}`)
@@ -157,7 +162,7 @@ export default createStore({
     
     setPdfSrc({commit}, payload){
       commit('setPdfSrc', payload)
-    }
+    },
   },
   modules: {
   }
