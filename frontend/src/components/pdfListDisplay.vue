@@ -21,7 +21,7 @@ div
                   type="button"
                   @click="confirmDelete(document._id, document.title)"
                 ) Delete
-        mDocumentPopout.modal-fade(role="dialog" :documentId="selectedId")
+        mDocumentPopout.modal-fade(role="dialog" :documentId="selectedId" :key="selectedId")
 </template>
 
 <script>
@@ -59,10 +59,11 @@ export default {
     
     async openModal(document) {
       try {
+        this.selectedId = document?._id
         const fetchedDocument = await this.fetchDocumentById(document._id)
         
         if(fetchedDocument) {
-          await this.setActiveDocument(fetchedDocument)
+          await this.$store.commit('setCurrentDocument', fetchedDocument)
           await this.toggleModal(true)
         }
       } catch(e) {
@@ -74,11 +75,18 @@ export default {
     setActiveDocument(fetchedDocument){
       // console.log(JSON.stringify(fetchedDocument, null,2)) // debug
       // console.log(`Document in setActiveDocument:${fetchedDocument}`) // debug
-      this.selectedId = fetchedDocument?._id
+      //this.selectedId = fetchedDocument?._id
       
       this.$store.commit('setCurrentDocument', fetchedDocument)
       // this.$store.commit('setPdfSrc', document.fileUrl)
+    },
+    
+    watch: {
+    documentId(newVal, oldVal) {
+      console.log(`> documentId changed: ${oldVal} -> ${newVal} <`);
     }
+},
+
   },
 }
 </script>

@@ -118,7 +118,9 @@ export default {
         },
     },
     created() {
-        if(this.documentId) {
+        console.log(`> Document on creation: ${this.currentDocument} <`)
+        console.log(`> DocumentID on creation: ${this.currentDocument._id} <`)
+        if(this.documentId && this.documentId !== 'no-document-id-passed') {
             console.log(`> Document ID on creation: ${this.documentId} <`)
             this.$store.dispatch('fetchDocumentById', this.documentId)
             .then(() => {
