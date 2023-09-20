@@ -107,9 +107,9 @@ export default {
         },
         updateDocument() {
             if(this.updateData.title || this.updateData.description) {
-                console.log(`> Document ID passed in UpdateDocument(): ${this.currentDocument._id} <`)
+                console.log(`> Document ID passed in UpdateDocument(): ${this.documentId} <`)
                 this.$store.dispatch('updateDocument', {
-                    documentId: this.currentDocument._id,
+                    documentId: this.documentId,
                     updateData: this.updateData
                 })
             } else {
@@ -119,16 +119,20 @@ export default {
     },
     created() {
         console.log(`> Document on creation: ${this.currentDocument} <`)
-        console.log(`> DocumentID on creation: ${this.currentDocument._id} <`)
+        // console.log(`> DocumentID on creation: ${this.currentDocument._id} <`) // returns undefined
         if(this.documentId && this.documentId !== 'no-document-id-passed') {
             console.log(`> Document ID on creation: ${this.documentId} <`)
-            this.$store.dispatch('fetchDocumentById', this.documentId)
-            .then(() => {
-                console.log(`> Current Document on creation fetch: ${this.$store.getters.getCurrentDocument} <`)
-                this.isDataLoaded = true  // set isDataLoaded to true once data is fetched
-                this.updateData.title = this.currentDocument?.title || ''
-                this.updateData.description = this.currentDocument?.description || ''
-            })
+            console.log(`> Current Document on creation fetch: ${this.$store.getters.getCurrentDocument} <`)
+            this.isDataLoaded = true  // set isDataLoaded to true once data is fetched
+            this.updateData.title = this.currentDocument?.title || ''
+            this.updateData.description = this.currentDocument?.description || ''
+            //this.$store.dispatch('fetchDocumentById', this.documentId)
+            // .then(() => {
+            //     console.log(`> Current Document on creation fetch: ${this.$store.getters.getCurrentDocument} <`)
+            //     this.isDataLoaded = true  // set isDataLoaded to true once data is fetched
+            //     this.updateData.title = this.currentDocument?.title || ''
+            //     this.updateData.description = this.currentDocument?.description || ''
+            // })
         }
     },
 

@@ -80,12 +80,12 @@ export default {
       this.$store.commit('setCurrentDocument', fetchedDocument)
       // this.$store.commit('setPdfSrc', document.fileUrl)
     },
+},
     
     watch: {
     documentId(newVal, oldVal) {
       console.log(`> documentId changed: ${oldVal} -> ${newVal} <`);
     }
-},
 
   },
 }

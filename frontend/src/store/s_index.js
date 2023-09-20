@@ -116,18 +116,13 @@ export default createStore({
   */
     async updateDocument({ commit }, { documentId, updateData}) {
       try {
-        const formData = new FormData()
-        Object.keys(updateData).forEach(key => {
-          formData.append(key, updateData[key])
-        })
-       
-        const response = await axios.post(`/docs/update/${documentId}`, formData)
+        const response = await axios.post(`/docs/update/${documentId}`, updateData)
         
         if (response.data.message.includes('updated successfully')) {
           log(`UpdateDocument() response -  response.data.updatedDocument: ${response.data.updatedDocument}`)
           commit('setDocuments', response.data.updatedDocument) // update state with the new document data
           
-          this.dispatch('fetchAllDocuments') // hard reload to ensure data consistency
+          await this.dispatch('fetchAllDocuments') // hard reload to ensure data consistency
         }
       } catch (e) {
         console.log(`Error in updateDocument: ${e}`)
