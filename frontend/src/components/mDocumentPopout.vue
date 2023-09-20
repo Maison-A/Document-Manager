@@ -77,20 +77,13 @@ export default {
             isDataLoaded: false,
         }
     },
-    
-    watch: {
-        documentId(newVal) {
-            if(newVal) {
-                this.$store.dispatch('fetchDocumentById', newVal)
-            }
-        }
-    },
 
     computed: {
         showModal(){
             return this.$store.state.showModal
         },
         pdfSrc(){
+            console.log(`current pdfSrc: ${this.$store.state.pdfSrc}`)
             return this.$store.state.pdfSrc
         },
         currentDocument(){
@@ -114,7 +107,7 @@ export default {
         updateDocument() {
             if(this.updateData.title || this.updateData.description) {
                 this.$store.dispatch('updateDocument', { 
-                documentId: this.currentDocument._id, 
+                documentId: this.currentDocument._id,
                 updateData: this.updateData
                 })
             } else {

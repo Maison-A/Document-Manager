@@ -35,8 +35,9 @@ export default createStore({
       state.showModal = payload
     },
     
-    setPdfSrc(state, payload){
-      state.pdfSrc = payload
+    setPdfSrc(state, url){
+      state.pdfSrc = url
+      console.log(`pdfSrc in mutation: ${state.pdfSrc}`)
     },
     
     setCurrentDocument(state, document) {
@@ -98,7 +99,9 @@ export default createStore({
         log(`response-data: ${res.data}`)
         
         commit('setCurrentDocument', res.data)
-        log(`Current Document Now Set: ${res.data}`)
+        // log(`Current Document Now Set: ${res.data}`) // debug
+        // log(`Final PDF Source URL: http://localhost:3000${res.data.fileUrl}`) // debug
+
         return res.data
         
       }catch(e){

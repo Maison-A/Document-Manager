@@ -105,6 +105,7 @@ router.get('/all', async (req, res) => {
 router.get('/display/:id', async (req, res) => {
   try {
     const docToDisplay = await Document.findById(req.params.id)
+    
     const dirCategory = getPrefix(docToDisplay)
     const filePath = path.join(__dirname, `../../../Docs/${dirCategory}/${docToDisplay.title}`)
     

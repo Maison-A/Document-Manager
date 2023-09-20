@@ -7,14 +7,14 @@ div
   div(v-if='documents && documents.length > 0')
     h3.form-label PDF List
     ul.list-group.container
-        li(v-for="document in documents" 
+        li(v-for="document in documents"
           :key="document._id"
           :class="{ 'list-group-item': true, 'active': isActive(document) }"
         )
           div.text-center.row
               div.d-flex.align-items.justify-content-between.col
                     a(@click.prevent="openModal(document)")
-                        button.btn.btn-primary.btn-lg.mb-auto {{ document.title }}
+                        button.btn.btn-dark.btn-lg {{ document.title }}
                         p.text-wrap.fs-4 {{ document.description }}
               div.col
                 button.btn.btn-outline-danger.d-flex.flex-column(
@@ -71,33 +71,15 @@ export default {
       }
     },
     
-    setActiveDocument(document){
-      console.log(JSON.stringify(document, null,2))
-      console.log(`Document in setActiveDocument:${document}`)
-      this.selectedId = document?._id
-      this.$store.commit('setCurrentDocument', document)
-      this.$store.commit('setPdfSrc', document.pdfSrc)
+    setActiveDocument(fetchedDocument){
+      // console.log(JSON.stringify(fetchedDocument, null,2)) // debug
+      // console.log(`Document in setActiveDocument:${fetchedDocument}`) // debug
+      this.selectedId = fetchedDocument?._id
+      
+      this.$store.commit('setCurrentDocument', fetchedDocument)
+      // this.$store.commit('setPdfSrc', document.fileUrl)
     }
   },
-    // async openModal(document){
-    //   try{
-    //     await this.fetchDocumentById(document._id)
-    //     await this.setActiveDocument(document)
-    //     await this.toggleModal(true)
-    //   }catch(e){
-    //     console.log(`ERROR in openModal(document): ${e}`)
-    //     throw e
-    //   }
-    // },
-
-  // watch:{
-  //   '$store.state.pdfSrc':{ // watcher for pdfSrc changes
-  //     handler: function(newVal, oldVal){
-  //       console.log(`pdfSrc has changed to: ${newVal}`)
-  //     },
-  //     deep: true
-  //   }
-  // }
 }
 </script>
 
