@@ -136,11 +136,11 @@ router.get('/display/:id', async (req, res) => {
  * @param {Object} res - The response object
  * @returns {Object} res - The response object
  */
-router.post('/update/:id', upload.single('file'), async (req, res) => {
+router.post('/update/:id', async (req, res) => {
+  const docId = req.params.id
   try {
-    const docId = req.params.id
     const updateData = req.body
-    log(`update data is: ${updateData}`)
+    log(`update data is: ${JSON.stringify(updateData)}`)
     let updatedDocument = await Document.findByIdAndUpdate(docId, updateData, { new: true }) // update db record
     
     if (!updatedDocument) {

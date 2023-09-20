@@ -92,18 +92,15 @@ export default createStore({
     async fetchDocumentById({commit}, documentId){
       try{
         const res = await axios.get(`docs/display/${documentId}`)
-        log(`response fileUrl: ${res.data.fileUrl}`)
+        log(`fetchDocumentById() param - documentID: ${documentId}`)
         
+        log(`fetchDocumentById() response - fileUrl: ${res.data.fileUrl}`)
         commit('setPdfSrc', `http://localhost:3000${res.data.fileUrl}`)
-        log(`response-data-document: ${res.data}`)
-        log(`response-data: ${res.data}`)
         
+        log(`fetchDocumentById() response - res.data: ${res.data}`)
         commit('setCurrentDocument', res.data)
-        // log(`Current Document Now Set: ${res.data}`) // debug
-        // log(`Final PDF Source URL: http://localhost:3000${res.data.fileUrl}`) // debug
-
-        return res.data
         
+        return res.data
       }catch(e){
         console.log(`Error fetching document by id ${e}`)
       }
@@ -117,20 +114,19 @@ export default createStore({
    * @param {}  - 
    * @returns {}  - 
   */
-    async updateDocument({ commit }, { documentId, updateData, file }) {
+    async updateDocument({ commit }, { documentId, updateData}) {
       try {
         const formData = new FormData()
         Object.keys(updateData).forEach(key => {
           formData.append(key, updateData[key])
         })
-        if(file) {
-          formData.append('file', file)
-        }
-        
+       
         const response = await axios.post(`/docs/update/${documentId}`, formData)
         
         if (response.data.message.includes('updated successfully')) {
+          log(`UpdateDocument() response -  response.data.updatedDocument: ${response.data.updatedDocument}`)
           commit('setDocuments', response.data.updatedDocument) // update state with the new document data
+          
           this.dispatch('fetchAllDocuments') // hard reload to ensure data consistency
         }
       } catch (e) {

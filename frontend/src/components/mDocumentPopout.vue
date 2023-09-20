@@ -47,7 +47,7 @@ div.modal.fade.show.d-block(
                             @click='closeModal'
                         ) Close
                     div.col
-                        button.btn.btn-primary(
+                        button.btn.btn-success(
                             type='button'
                             @click='updateDocument'
                         ) Save Changes
@@ -83,19 +83,20 @@ export default {
             return this.$store.state.showModal
         },
         pdfSrc(){
-            console.log(`current pdfSrc: ${this.$store.state.pdfSrc}`)
+            console.log(`> current pdfSrc: ${this.$store.state.pdfSrc} <`)
             return this.$store.state.pdfSrc
         },
         currentDocument(){
+            console.log(`> current Document: ${this.$store.getters.getCurrentDocument} <`)
             return this.$store.getters.getCurrentDocument
         },
         currentTitle(){
-            console.log('Current Title: ', this.currentDocument?.title)
-            return this.currentDocument ? this.currentDocument.title  : 'Message'
+            console.log(`> Current Title: ${this.currentDocument?.title} <`)
+            return this.currentDocument ? this.currentDocument.title  : 'Error in backend'
         },
         currentDescription(){
-            console.log('Current Description: ', this.currentDocument?.description)
-            return this.currentDocument ? this.currentDocument.description : 'Message'
+            console.log(` Current Description: ${this.currentDocument?.description} <`)
+            return this.currentDocument ? this.currentDocument.description : 'Error in backend'
         }
 
     },
@@ -106,9 +107,10 @@ export default {
         },
         updateDocument() {
             if(this.updateData.title || this.updateData.description) {
-                this.$store.dispatch('updateDocument', { 
-                documentId: this.currentDocument._id,
-                updateData: this.updateData
+                console.log(`> Document ID passed in UpdateDocument(): ${this.currentDocument._id} <`)
+                this.$store.dispatch('updateDocument', {
+                    documentId: this.currentDocument._id,
+                    updateData: this.updateData
                 })
             } else {
                 console.log('No changes made')
@@ -116,12 +118,14 @@ export default {
         },
     },
     created() {
-        
         if(this.documentId) {
-            console.log('Document ID: ', this.documentId)
-            this.$store.dispatch('fetchDocumentById', this.documentId).then(() => {
-                console.log('Current Document:', this.$store.getters.getCurrentDocument)
+            console.log(`> Document ID on creation: ${this.documentId} <`)
+            this.$store.dispatch('fetchDocumentById', this.documentId)
+            .then(() => {
+                console.log(`> Current Document on creation fetch: ${this.$store.getters.getCurrentDocument} <`)
                 this.isDataLoaded = true  // set isDataLoaded to true once data is fetched
+                this.updateData.title = this.currentDocument?.title || ''
+                this.updateData.description = this.currentDocument?.description || ''
             })
         }
     },
