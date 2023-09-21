@@ -11,16 +11,16 @@ div.modal.fade.show.d-block(
         div.modal-content
             h5.modal-title.m-3(id='docDisplayLabel') {{ currentTitle }}
                 button(
-                    type='button', 
-                    class='close', 
-                    @click='closeModal', 
+                    type='button'
+                    class='close'
+                    @click='closeModal'
                     aria-label='Close'
                 )
                     span(aria-hidden='true') &times;
             div.modal-body
                 vue-pdf-embed(
-                    :source="pdfSrc" 
-                    width="600" 
+                    :source="pdfSrc"
+                    width="600"
                     height="500"
                 )
             div.modal-footer
@@ -67,7 +67,7 @@ export default {
     components:{ 
         VuePdfEmbed,
      },
-     
+    
     data() {
         return {
             updateData: {
@@ -83,19 +83,19 @@ export default {
             return this.$store.state.showModal
         },
         pdfSrc(){
-            console.log(`> current pdfSrc: ${this.$store.state.pdfSrc} <`)
+            console.log(`> DocumentPopout - pdfSrc returned from pdfSrc(): ${this.$store.state.pdfSrc} <`)
             return this.$store.state.pdfSrc
         },
         currentDocument(){
-            console.log(`> current Document: ${this.$store.getters.getCurrentDocument} <`)
+            console.log(`> DocumentPopout - document returned from currentDocument(): ${JSON.stringify(this.$store.getters.getCurrentDocument, null, 2)} <`)
             return this.$store.getters.getCurrentDocument
         },
         currentTitle(){
-            console.log(`> Current Title: ${this.currentDocument?.title} <`)
+            console.log(`> DocumentPopout - title returned from currentTitle(): ${this.currentDocument?.title} <`)
             return this.currentDocument ? this.currentDocument.title  : 'Error in backend'
         },
         currentDescription(){
-            console.log(` Current Description: ${this.currentDocument?.description} <`)
+            console.log(`> DocumentPopout - description returned from currentDescription(): ${this.currentDocument?.description} <`)
             return this.currentDocument ? this.currentDocument.description : 'Error in backend'
         }
 
@@ -103,10 +103,13 @@ export default {
     
     methods: {
         closeModal(){
+            this.$store.commit('setCurrentDocument', null)
+            console.log(`> DocumentPopout - current Document cleared: ${this.currentDocument}<`) // logs current document again due to nature of calling currentDocument
             this.$store.commit('toggleModal', false)
         },
         updateDocument() {
             if(this.updateData.title || this.updateData.description) {
+                console.log(`> Sending Update Data: ${JSON.stringify(this.updateData, null, 2)} <`)
                 console.log(`> Document ID passed in UpdateDocument(): ${this.documentId} <`)
                 this.$store.dispatch('updateDocument', {
                     documentId: this.documentId,
@@ -118,21 +121,16 @@ export default {
         },
     },
     created() {
-        console.log(`> Document on creation: ${this.currentDocument} <`)
-        // console.log(`> DocumentID on creation: ${this.currentDocument._id} <`) // returns undefined
-        if(this.documentId && this.documentId !== 'no-document-id-passed') {
-            console.log(`> Document ID on creation: ${this.documentId} <`)
-            console.log(`> Current Document on creation fetch: ${this.$store.getters.getCurrentDocument} <`)
-            this.isDataLoaded = true  // set isDataLoaded to true once data is fetched
+        console.log(`> Document Popout - Doc on Created(): ${JSON.stringify(this.$store.getters.getCurrentDocument, null, 2)} <`)
+        
+        if(this.documentId && this.documentId !== 'no-document-id-passed'){
+            console.log(`> Document Popout - Document ID on creation: ${this.documentId} <`) // debug
+            console.log(`> Document Popout - Current Document on creation fetch: ${this.$store.getters.getCurrentDocument} <`) // debug
+            
             this.updateData.title = this.currentDocument?.title || ''
             this.updateData.description = this.currentDocument?.description || ''
-            //this.$store.dispatch('fetchDocumentById', this.documentId)
-            // .then(() => {
-            //     console.log(`> Current Document on creation fetch: ${this.$store.getters.getCurrentDocument} <`)
-            //     this.isDataLoaded = true  // set isDataLoaded to true once data is fetched
-            //     this.updateData.title = this.currentDocument?.title || ''
-            //     this.updateData.description = this.currentDocument?.description || ''
-            // })
+            
+            this.isDataLoaded = true  // set isDataLoaded to true once data is fetched
         }
     },
 

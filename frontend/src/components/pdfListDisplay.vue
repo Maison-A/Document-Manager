@@ -9,7 +9,7 @@ div
     ul.list-group.container
         li(v-for="document in documents"
           :key="document._id"
-          :class="{ 'list-group-item': true, 'active': isActive(document) }"
+          :class="{ 'list-group-item': true }"
         )
           div.text-center.row
               div.d-flex.align-items.justify-content-between.col
@@ -21,7 +21,11 @@ div
                   type="button"
                   @click="confirmDelete(document._id, document.title)"
                 ) Delete
-        mDocumentPopout.modal-fade(role="dialog" :documentId="selectedId" :key="selectedId")
+        mDocumentPopout.modal-fade(
+          role="dialog" 
+          :key="selectedId"
+          :documentId="selectedId" 
+        )
 </template>
 
 <script>
@@ -42,14 +46,20 @@ export default {
     }
   },
   methods:{
-    ...mapActions(['fetchAllDocuments','deleteDocument','toggleModal','setPdfSrc', 'fetchDocumentById',]),
+    ...mapActions([
+      'fetchAllDocuments',
+    'deleteDocument',
+    'toggleModal',
+    'setPdfSrc', 
+    'fetchDocumentById'
+  ]),
     
     isActive(document){
         return document && document?._id === this.selectedId
     },
     
     async confirmDelete(documentId, documentTitle){
-      const willDelete = window.confirm(`Confirm you would like to delete ${documentTitle}` )
+      const willDelete = window.confirm(`Confirm you would like to delete ${documentTitle}`)
       
       if(willDelete){
         await this.deleteDocument(documentId)
@@ -57,34 +67,25 @@ export default {
       }
     },
     
-    async openModal(document) {
+    async openModal(document){
       try {
-        this.selectedId = document?._id
-        const fetchedDocument = await this.fetchDocumentById(document._id)
+        this.selectedId = document?._id // set id to pass in to modal
+        const fetchedDocument = await this.fetchDocumentById(document._id) // fetch doc to pass
         
-        if(fetchedDocument) {
-          await this.$store.commit('setCurrentDocument', fetchedDocument)
+        if(fetchedDocument) { // if successful, update store
+          await this.$store.commit('setCurrentDocument', fetchedDocument) // commiut new doc and set as 'current doc'
           await this.toggleModal(true)
         }
       } catch(e) {
-        console.log(`ERROR in openModal(document): ${e}`)
+        console.log(`>>> ERROR in openModal(document): ${e} <<<`)
         throw e
       }
-    },
-    
-    setActiveDocument(fetchedDocument){
-      // console.log(JSON.stringify(fetchedDocument, null,2)) // debug
-      // console.log(`Document in setActiveDocument:${fetchedDocument}`) // debug
-      //this.selectedId = fetchedDocument?._id
-      
-      this.$store.commit('setCurrentDocument', fetchedDocument)
-      // this.$store.commit('setPdfSrc', document.fileUrl)
     },
 },
     
     watch: {
     documentId(newVal, oldVal) {
-      console.log(`> documentId changed: ${oldVal} -> ${newVal} <`);
+      console.log(`> pdfListDisplay - documentId changed: ${oldVal} -> ${newVal} <`)
     }
 
   },

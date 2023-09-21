@@ -6,9 +6,9 @@ const path = require('path')
 const { log } = require('../../../utils/generalUtils')
 const Document = require('../../models/documentModel')
 const fs = require('fs') // file system needed to manage local documents
-const {  createAndStoreDocument, readCsv, getStorageDir, getPrefix, deleteDocFromCsv} = require('../../../utils/fileUtils.js')
 router.use(bodyParser.json())
-
+// import utils
+const {  createAndStoreDocument, readCsv, getStorageDir, getPrefix, deleteDocFromCsv, setFileTitle} = require('../../../utils/fileUtils.js')
 // store generated docs
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -111,15 +111,13 @@ router.get('/display/:id', async (req, res) => {
     
     if (fs.existsSync(filePath)) { // check if file exists before sending
       const fileUrl = `/Docs/${dirCategory}/${docToDisplay.title}`
-      
-      log(`file exists! file path: ${filePath}`)
       res.json({
         fileUrl,
         title: docToDisplay.title,
         description: docToDisplay.description // assuming you have a description field
       })
     } else {
-      res.status(404).send({ message: 'Document not found' })
+      res.status(404).send({ message: '>>> ERROR: Document not found <<<' })
     }
   } catch (e) {
     log(`'Error fetching document ${e}`)
@@ -139,27 +137,27 @@ router.get('/display/:id', async (req, res) => {
 router.post('/update/:id', async (req, res) => {
   const docId = req.params.id
   try {
-    const updateData = req.body
+    let updateData = req.body
     log(`update data is: ${JSON.stringify(updateData)}`)
+
     let updatedDocument = await Document.findByIdAndUpdate(docId, updateData, { new: true }) // update db record
-    
+
     if (!updatedDocument) {
       return res.status(404).json({ error: 'Document not found' })
     }
 
-    // Step 2: If a new file is uploaded, handle the file update
     if (req.file) {
       const dirCategory = getPrefix(updatedDocument)
+      const newFileTitle = setFileTitle(req.body) // Use setFileTitle here
       const oldFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${updatedDocument.title}`)
-      const newFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${req.file.filename}`)
+      const newFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${newFileTitle}`)
 
-      // Remove the old file if exists
       if (fs.existsSync(oldFilePath)) {
         fs.unlinkSync(oldFilePath)
       }
 
-      // Update the new file path in the database
-      updatedDocument.fileUrl = `/Docs/${dirCategory}/${req.file.filename}`
+      updatedDocument.fileUrl = `/Docs/${dirCategory}/${newFileTitle}`
+      updatedDocument.title = newFileTitle // Update the title
       updatedDocument = await updatedDocument.save()
     }
 

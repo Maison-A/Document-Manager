@@ -49,8 +49,8 @@ async function createAndStoreDocument(inputDoc) {
 async function populateDocData(inputDoc){
   try{
     log("----- populating document data -----")
-    const description = setDescription(inputDoc)
-    const fileTitle = setFileTitle(inputDoc)
+    const fileTitle = inputDoc.title ? setFileTitle(inputDoc) : generateFileTitle(inputDoc)
+    const description = inputDoc.description || setDescription(inputDoc)    
     const filePath = path.join(getStorageDir(inputDoc.category.toLowerCase()), fileTitle) // sidestep scoping issue
     log(`file path established: ${filePath}`)
   

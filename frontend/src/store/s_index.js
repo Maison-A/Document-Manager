@@ -5,18 +5,18 @@ axios.defaults.baseURL = 'http://localhost:3000/'
 
 export default createStore({
   state: {
-    // state props
     documents: [],
     showModal: false,
     pdfSrc: '',
     categories: ['signatures', 'supporting documents'],
     currentDocument:{},
   },
+  
   getters: {
-    // getters
     getCurrentDocument(state){
       return state.currentDocument
-    }
+    },
+    
   },
   mutations: {
     addDocument(state,document){
@@ -43,6 +43,16 @@ export default createStore({
     setCurrentDocument(state, document) {
       state.currentDocument = document
     },
+    
+    updateDocumentInState(state, updatedDocument) {
+      const index = state.documents.findIndex(document => document._id === updatedDocument._id)
+      if (index !== -1) {
+        state.documents.splice(index, 1, updatedDocument)
+      } else 
+      {
+        log('>> ERROR: Document not found in state <<')
+      }
+    },
   },
   actions: {
     /**
@@ -56,7 +66,7 @@ export default createStore({
         const res = await axios.get('/docs/all')
         commit('setDocuments', res.data)
       }catch(e){
-        console.log('ERROR || s_Index fetchAllDcouments(): ', e)
+        log(`>>ERROR: Store - fetchAllDcouments() ${e}<<`)
         commit('setDocuments',[]) // clear array
       }
     },
@@ -92,17 +102,17 @@ export default createStore({
     async fetchDocumentById({commit}, documentId){
       try{
         const res = await axios.get(`docs/display/${documentId}`)
-        log(`fetchDocumentById() param - documentID: ${documentId}`)
+        log(`Store - fetchDocumentById() param - documentID: ${documentId}`)
         
-        log(`fetchDocumentById() response - fileUrl: ${res.data.fileUrl}`)
+        log(`Store - fetchDocumentById() response - fileUrl: ${res.data.fileUrl}`)
         commit('setPdfSrc', `http://localhost:3000${res.data.fileUrl}`)
         
-        log(`fetchDocumentById() response - res.data: ${res.data}`)
+        log(`Store - fetchDocumentById() response - res.data: ${JSON.stringify(res.data, null, 2)}`)
         commit('setCurrentDocument', res.data)
         
         return res.data
       }catch(e){
-        console.log(`Error fetching document by id ${e}`)
+        console.log(`>> ERROR: fetching document by id ${e} <<`)
       }
     },
   
@@ -114,21 +124,21 @@ export default createStore({
    * @param {}  - 
    * @returns {}  - 
   */
-    async updateDocument({ commit }, { documentId, updateData}) {
-      try {
-        const response = await axios.post(`/docs/update/${documentId}`, updateData)
+  async updateDocument({ commit }, { documentId, updateData}) {
+    try {
+      const response = await axios.post(`/docs/update/${documentId}`, updateData)
+      
+      if (response.data.message.includes('updated successfully')) {
+        log(`Store - UpdateDocument() response -  response.data.updatedDocument: ${JSON.stringify(response.data.updatedDocument, null, 2)}`)
+        commit('updateDocumentInState', response.data.updatedDocument) // update state with the new document data
         
-        if (response.data.message.includes('updated successfully')) {
-          log(`UpdateDocument() response -  response.data.updatedDocument: ${response.data.updatedDocument}`)
-          commit('setDocuments', response.data.updatedDocument) // update state with the new document data
-          
-          await this.dispatch('fetchAllDocuments') // hard reload to ensure data consistency
-        }
-      } catch (e) {
-        console.log(`Error in updateDocument: ${e}`)
+        this.dispatch('fetchAllDocuments') // hard reload to ensure data consistency
       }
-    },
-
+    } catch (e) {
+      console.log(`Error in updateDocument: ${e}`)
+    }
+  },
+  
 
   /**
    * Name: deleteDocument
@@ -144,7 +154,7 @@ export default createStore({
           this.dispatch('fetchAllDocuments') // hard reload
         }
       } catch(e){
-        console.log(`error in delete documents ${e}`)
+        log(`>>ERROR in delete documents ${e}<<`)
         commit('deleteDocument', documentId)
       }
     },
