@@ -7,8 +7,10 @@ const { log } = require('../../../utils/generalUtils')
 const Document = require('../../models/documentModel')
 const fs = require('fs') // file system needed to manage local documents
 router.use(bodyParser.json())
+
 // import utils
-const {  createAndStoreDocument, readCsv, getStorageDir, getPrefix, deleteDocFromCsv, setFileTitle} = require('../../../utils/fileUtils.js')
+const {  createAndStoreDocument, readCsv, getStorageDir, getPrefix, deleteDocFromCsv, setFileTitle, updateCsv} = require('../../../utils/fileUtils.js')
+
 // store generated docs
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -141,17 +143,17 @@ router.post('/update/:id', async (req, res) => {
     log(`update data is: ${JSON.stringify(updateData)}`)
 
     let updatedDocument = await Document.findByIdAndUpdate(docId, updateData, { new: true }) // update db record
-
     if (!updatedDocument) {
       return res.status(404).json({ error: 'Document not found' })
     }
 
+    const csvFilePath = path.join(baseDir, 'Documents.csv') // set csv file path
     if (req.file) {
       const dirCategory = getPrefix(updatedDocument)
       const newFileTitle = setFileTitle(req.body) // Use setFileTitle here
       const oldFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${updatedDocument.title}`)
       const newFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${newFileTitle}`)
-
+      
       if (fs.existsSync(oldFilePath)) {
         fs.unlinkSync(oldFilePath)
       }
@@ -160,11 +162,11 @@ router.post('/update/:id', async (req, res) => {
       updatedDocument.title = newFileTitle // Update the title
       updatedDocument = await updatedDocument.save()
     }
+    await updateCsv({ csvFilePath, baseDir: '../../../Docs', updatedDocument })
 
-    // Step 3: Update the CSV record (if necessary based on your utils)
-    // You might need to add an updateCsv function to your utils
-    // updateCsv({ csvFilePath, baseDir, updatedDocument })
-
+    res.json({ message: `Document ${updatedDocument.title} updated successfully`, updatedDocument })
+    
+    // Update the CSV record
     res.json({ message: `Document ${updatedDocument.title} updated successfully`, updatedDocument })
   } catch (error) {
     log(`Error updating document ${docId}: ${error}`)

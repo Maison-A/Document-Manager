@@ -111,6 +111,12 @@ export default {
             if(this.updateData.title || this.updateData.description) {
                 console.log(`> Sending Update Data: ${JSON.stringify(this.updateData, null, 2)} <`)
                 console.log(`> Document ID passed in UpdateDocument(): ${this.documentId} <`)
+                if(this.updateData.title === ''){
+                    this.updateData.title = this.currentTitle
+                }
+                if(this.updateData.description === ''){
+                    this.updateData.description = this.currentDescription
+                }
                 this.$store.dispatch('updateDocument', {
                     documentId: this.documentId,
                     updateData: this.updateData

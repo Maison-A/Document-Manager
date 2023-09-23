@@ -66,7 +66,6 @@ async function populateDocData(inputDoc){
 }
 
 
-
 /**
  * Name: setFileTitle
  * Desc: 
@@ -238,6 +237,32 @@ function readCsv(csvFilePath, baseDir, category){
 
 
 /**
+ * Name: updateCsv
+ * Desc: Reads the CSV, finds the record that matches the updated document, and replaces it.
+ * @param {string} csvFilePath - The path to the CSV file.
+ * @param {string} baseDir - The base directory path.
+ * @param {string} category - The category to filter CSV data for.
+ * @returns {Promise<Array>} - A Promise that resolves with an array of CSV data rows.
+ */
+async function updateCsv({ csvFilePath, baseDir, updatedDocument }) {
+  try {
+    const csvData = await readCsv(csvFilePath, baseDir)
+    const normalizedPath = updatedDocument.fileUrl.replace(/^\//, '').replace(/\//g, '\\')
+    const newRecord = {
+      Description: updatedDocument.description || '',
+      FileURL: normalizedPath,
+      Category: updatedDocument.category.toLowerCase(),
+    }
+    
+    const updatedCsvData = csvData.map(row => row.FileURL === normalizedPath ? newRecord : row)
+    
+    await refreshCsvData(csvFilePath, updatedCsvData)
+  } catch (e) {
+    log(`Error updating CSV: ${e}`)
+  }
+}
+
+/**
  * Name: writeCsv
  * Desc: Writes document data to a CSV file from document passed in, writer tool reflects use case
  * @param {string} csvFilePath - The path to the CSV file.
@@ -317,8 +342,8 @@ async function refreshCsvData(csvFilePath, csvData){
     const csvW = createCsvWriter({ // create writer instance 
       path: csvFilePath, // set file path & header
       header: [
-        {id: 'Name', title: 'Name'},
-        {id: 'Path', title: 'Path'},
+        {id: 'Description', title: 'Description'},
+        {id: 'FileURL', title: 'FileURL'},
         {id: 'Category', title: 'Category'},
       ]
     })
@@ -402,8 +427,10 @@ module.exports = {
   createAndStoreDocument,
   getStorageDir,
   getPrefix,
-  readCsv: readCsv,
-  writeCsv: writeCsv,
+  readCsv,
+  writeCsv,
   deleteDocFromCsv,
   refreshCsvData,
+  updateCsv,
+  setFileTitle,
 }
