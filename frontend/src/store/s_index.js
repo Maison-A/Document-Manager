@@ -2,7 +2,17 @@ import { createStore } from 'vuex'
 const { log } = require('../../../utils/generalUtils')
 const axios = require('axios')
 axios.defaults.baseURL = 'http://localhost:3000/'
-
+      
+function setFileTitle(inputData){
+  let fileTitle = inputData.title
+  .trim()
+  .replace(/\s+/g, '-') // trim whitespace and replace with - for user titled files
+  
+  if (!fileTitle.toLowerCase().endsWith('.pdf')){
+    fileTitle += `.pdf` // check if .pdf extention exists and place if not
+  }
+  return fileTitle
+}
 export default createStore({
   state: {
     documents: [],
@@ -18,6 +28,7 @@ export default createStore({
     },
     
   },
+  
   mutations: {
     addDocument(state,document){
       state.documents.push(document)
@@ -54,6 +65,7 @@ export default createStore({
       }
     },
   },
+  
   actions: {
     /**
      * Name: fetchAllDocuments
@@ -73,12 +85,12 @@ export default createStore({
     
     
     
-  /**
-   * Name: createAndStoreDocument
-   * Desc: 
-   * @param {}  - 
-   * @returns {}  - 
-  */
+    /**
+     * Name: createAndStoreDocument
+     * Desc: 
+     * @param {}  - 
+     * @returns {}  - 
+    */
     async createAndStoreDocument({ commit }, payload) {
       try {
         const response = await axios.post('/docs/create', payload)
@@ -93,12 +105,12 @@ export default createStore({
     
     
     
-  /**
-   * Name: fetchDocumentById
-   * Desc: 
-   * @param {}  - 
-   * @returns {}  - 
-  */
+    /**
+     * Name: fetchDocumentById
+     * Desc: 
+     * @param {}  - 
+     * @returns {}  - 
+    */
     async fetchDocumentById({commit}, documentId){
       try{
         const res = await axios.get(`docs/display/${documentId}`)
@@ -116,7 +128,6 @@ export default createStore({
       }
     },
   
-  
     
   /**
    * Name: updateDocument
@@ -124,12 +135,15 @@ export default createStore({
    * @param {}  - 
    * @returns {}  - 
   */
-  async updateDocument({ commit }, { documentId, updateData}) {
+  async updateDocument({ commit }, { documentId, updateData }) {
     try {
+      // Clean up the title and append .pdf
+      updateData.title = setFileTitle(updateData)
       const response = await axios.post(`/docs/update/${documentId}`, updateData)
       
       if (response.data.message.includes('updated successfully')) {
         log(`Store - UpdateDocument() response -  response.data.updatedDocument: ${JSON.stringify(response.data.updatedDocument, null, 2)}`)
+        
         commit('updateDocumentInState', response.data.updatedDocument) // update state with the new document data
         
         this.dispatch('fetchAllDocuments') // hard reload to ensure data consistency
@@ -138,6 +152,7 @@ export default createStore({
       console.log(`Error in updateDocument: ${e}`)
     }
   },
+  
   
 
   /**
@@ -168,6 +183,7 @@ export default createStore({
       commit('setPdfSrc', payload)
     },
   },
+  
   modules: {
   }
 })

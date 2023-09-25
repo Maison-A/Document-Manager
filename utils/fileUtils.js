@@ -85,8 +85,6 @@ function setFileTitle(inputDoc){
   return fileTitle
 }
 
-
-
 /**
  * Name: generateFileTitle
  * Desc: 

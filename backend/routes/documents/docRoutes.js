@@ -146,26 +146,27 @@ router.post('/update/:id', async (req, res) => {
     if (!updatedDocument) {
       return res.status(404).json({ error: 'Document not found' })
     }
+    
     const baseDir = path.join(__dirname, '../../../Docs') // establish base dir
     const csvFilePath = path.join(baseDir, 'Documents.csv') // set csv file path
     
-    if (req.file) {
+    //if (req.file) {
       const dirCategory = getPrefix(updatedDocument)
       const newFileTitle = setFileTitle(req.body) // Use setFileTitle here
       const oldFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${updatedDocument.title}`)
       const newFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${newFileTitle}`)
       
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath)
-      }
+      // if (fs.existsSync(oldFilePath)) {
+      //   fs.unlinkSync(oldFilePath)
+      // }
 
       updatedDocument.fileUrl = `/Docs/${dirCategory}/${newFileTitle}`
       updatedDocument.title = newFileTitle // Update the title
+      
+      log(`New file url: ${updatedDocument.fileUrl}`)
       updatedDocument = await updatedDocument.save()
-    }
+    //}
     await updateCsv({ csvFilePath, baseDir: '../../../Docs', updatedDocument })
-
-    res.json({ message: `Document ${updatedDocument.title} updated successfully`, updatedDocument })
     
     // Update the CSV record
     res.json({ message: `Document ${updatedDocument.title} updated successfully`, updatedDocument })
