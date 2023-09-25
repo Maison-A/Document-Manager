@@ -146,8 +146,9 @@ router.post('/update/:id', async (req, res) => {
     if (!updatedDocument) {
       return res.status(404).json({ error: 'Document not found' })
     }
-
+    const baseDir = path.join(__dirname, '../../../Docs') // establish base dir
     const csvFilePath = path.join(baseDir, 'Documents.csv') // set csv file path
+    
     if (req.file) {
       const dirCategory = getPrefix(updatedDocument)
       const newFileTitle = setFileTitle(req.body) // Use setFileTitle here

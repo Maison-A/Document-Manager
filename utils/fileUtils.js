@@ -342,8 +342,8 @@ async function refreshCsvData(csvFilePath, csvData){
     const csvW = createCsvWriter({ // create writer instance 
       path: csvFilePath, // set file path & header
       header: [
-        {id: 'Description', title: 'Description'},
-        {id: 'FileURL', title: 'FileURL'},
+        {id: 'Name', title: 'Name'},
+        {id: 'Path', title: 'Path'},
         {id: 'Category', title: 'Category'},
       ]
     })

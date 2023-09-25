@@ -7,20 +7,20 @@ div
   div(v-if='documents && documents.length > 0')
     h3.form-label PDF List
     ul.list-group.container
-        li(v-for="document in documents"
+        li.flex-column.align-items-start(v-for="document in documents"
           :key="document._id"
           :class="{ 'list-group-item': true }"
         )
           div.text-center.row
-              div.d-flex.align-items.justify-content-between.col
+              div.col.d-flex.align-items.justify-content-between
                     a(@click.prevent="openModal(document)")
                         button.btn.btn-dark.btn-lg.shadow-sm.me-4 {{ document.title }}
-                        p.text-wrap.fs-4.d-inline-flex {{ document.description }}
-              div.col
-                button.btn.btn-outline-danger.shadow-sm.d-flex.flex-row-reverse(
-                  type="button"
-                  @click="confirmDelete(document._id, document.title)"
-                ) Delete
+                        p.text-wrap.fs-6.d-inline-flex {{ document.description }}
+              
+              button.col-3.btn.btn-outline-danger.shadow-sm.d-flex.flex-row(
+                type="button"
+                @click="confirmDelete(document._id, document.title)"
+              ) Delete
         mDocumentPopout.modal-fade(
           role="dialog" 
           :key="selectedId"
