@@ -14,10 +14,10 @@ div
           div.text-center.row
               div.d-flex.align-items.justify-content-between.col
                     a(@click.prevent="openModal(document)")
-                        button.btn.btn-dark.btn-lg {{ document.title }}
-                        p.text-wrap.fs-4 {{ document.description }}
+                        button.btn.btn-dark.btn-lg.shadow-sm.me-4 {{ document.title }}
+                        p.text-wrap.fs-4.d-inline-flex {{ document.description }}
               div.col
-                button.btn.btn-outline-danger.d-flex.flex-column(
+                button.btn.btn-outline-danger.shadow-sm.d-flex.flex-row-reverse(
                   type="button"
                   @click="confirmDelete(document._id, document.title)"
                 ) Delete
@@ -110,5 +110,8 @@ a {
     &:hover {
       text-decoration: underline;
     }
+}
+.mr{
+  margin-right: 10;
 }
 </style>
