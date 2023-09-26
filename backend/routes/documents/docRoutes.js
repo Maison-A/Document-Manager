@@ -137,43 +137,69 @@ router.get('/display/:id', async (req, res) => {
  * @returns {Object} res - The response object
  */
 router.post('/update/:id', async (req, res) => {
-  const docId = req.params.id
-  try {
-    let updateData = req.body
-    log(`update data is: ${JSON.stringify(updateData)}`)
+  const docId = req.params.id // Extract docId from route params
 
-    let updatedDocument = await Document.findByIdAndUpdate(docId, updateData, { new: true }) // update db record
+  try {
+      // First, find the existing document to capture oldFileUrl
+      let existingDocument = await Document.findById(docId)
+      if (!existingDocument) {
+        return res.status(404).json({ error: 'Document not found' })
+      }
+  let oldFileUrl = existingDocument.fileUrl
+  
+    // Update the document in MongoDB
+    const updateData = req.body
+    log(`update data is: ${JSON.stringify(updateData)}`)
+    let updatedDocument = await Document.findByIdAndUpdate(docId, updateData, { new: true })
     if (!updatedDocument) {
       return res.status(404).json({ error: 'Document not found' })
     }
-
-    const csvFilePath = path.join(baseDir, 'Documents.csv') // set csv file path
-    if (req.file) {
-      const dirCategory = getPrefix(updatedDocument)
-      const newFileTitle = setFileTitle(req.body) // Use setFileTitle here
-      const oldFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${updatedDocument.title}`)
-      const newFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${newFileTitle}`)
-      
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath)
-      }
-
-      updatedDocument.fileUrl = `/Docs/${dirCategory}/${newFileTitle}`
-      updatedDocument.title = newFileTitle // Update the title
-      updatedDocument = await updatedDocument.save()
-    }
-    await updateCsv({ csvFilePath, baseDir: '../../../Docs', updatedDocument })
-
-    res.json({ message: `Document ${updatedDocument.title} updated successfully`, updatedDocument })
     
-    // Update the CSV record
+    // Base directory and CSV file path
+    const baseDir = path.join(__dirname, '../../../Docs')
+    const csvFilePath = path.join(baseDir, 'Documents.csv')
+
+    // Generate new title and category-based prefix
+    const dirCategory = getPrefix(updatedDocument)
+    const newFileTitle = setFileTitle(req.body)
+
+    // Generate file paths for old and new files
+    const oldFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${oldFileUrl.split('/').pop()}`)
+    const newFilePath = path.join(__dirname, `../../../Docs/${dirCategory}/${newFileTitle}`)
+  
+    // Check and rename old file
+    if (fs.existsSync(oldFilePath)) {
+      fs.rename(oldFilePath, newFilePath, function(err) {
+        if (err) log('ERROR: ' + err)
+      })
+    } else {
+      log(`Old file doesn't exist at ${oldFilePath}`)
+    }
+
+    // Update Document's file URL and title
+    updatedDocument.fileUrl = `/Docs/${dirCategory}/${newFileTitle}`
+    updatedDocument.title = newFileTitle
+
+    // Save changes to MongoDB
+    updatedDocument = await updatedDocument.save()
+
+    log(`New file url: ${updatedDocument.fileUrl}`)
+
+    // Update the CSV
+    await updateCsv({ csvFilePath, baseDir: '../../../Docs', updatedDocument, oldFileUrl: oldFileUrl })
+
+    
     res.json({ message: `Document ${updatedDocument.title} updated successfully`, updatedDocument })
   } catch (error) {
     log(`Error updating document ${docId}: ${error}`)
     res.status(500).json({ error: 'Error updating document' })
   }
 })
+/**Main changes are:
 
+Moved let oldFileUrl = updatedDocument.fileUrl after confirming that updatedDocument is not null.
+Removed the unlinkSync which was deleting the file before attempting to rename.
+Added comments for each major step to help anyone reading the code understand what's happening. */
 
 
 /**

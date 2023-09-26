@@ -1,5 +1,5 @@
 <template lang="pug">
-div.center-form
+div.center-form.container
   div.form-row
     div.form-group.col-md-6
       label(for='documentTitle') Title of document
