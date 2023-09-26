@@ -39,8 +39,8 @@ const docRoutes = require('./routes/documents/docRoutes.js')
 /**
  * CONNECT TO MONGO DB via MONGOOSE
 */
-//mongoose.connect(url)
-mongoose.connect('mongodb://localhost:27017/pdfStorage')
+mongoose.connect(url)
+// mongoose.connect('mongodb://localhost:27017/pdfStorage')
   .then(()=>{
     console.log("connection is now open")
     // start express server & listen for requests
@@ -54,3 +54,4 @@ mongoose.connect('mongodb://localhost:27017/pdfStorage')
 
 // Define API endpoint
 app.use('/docs', docRoutes)
+app.use('/users', userRoutes)
