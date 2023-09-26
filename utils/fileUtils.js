@@ -244,29 +244,53 @@ function readCsv(csvFilePath, baseDir, category){
  */
 async function updateCsv({ csvFilePath, baseDir, updatedDocument, oldFileUrl }) {
   try {
+    // Read existing CSV data into an array of records
     const csvData = await readCsv(csvFilePath, baseDir)
     
     // Normalize the old and new file URLs
     const oldNormalizedPath = oldFileUrl.replace(/^\//, '').replace(/\//g, '\\')
     const newNormalizedPath = updatedDocument.fileUrl.replace(/^\//, '').replace(/\//g, '\\')
 
+    // Create the new record object using the updated document details
     const newRecord = {
-      Description: updatedDocument.description || '',
-      FileURL: newNormalizedPath,
-      Category: updatedDocument.category.toLowerCase(),
+      Name: updatedDocument.description || '',
+      Path: newNormalizedPath,
+      Category: updatedDocument.category.toLowerCase()
     }
 
-    // Replace the old record with the new one in the CSV data array
+    // Map over the existing CSV data to replace the old record with the new one
     const updatedCsvData = csvData.map(row => {
-      log(`Found matching row in CSV: ${JSON.stringify(row)}`)
-      return row.FileURL === oldNormalizedPath ? newRecord : row
+      // Normalize keys for FileURL and Path, Name and Description
+      const rowPath = row.Path || row.FileURL
+      const rowName = row.Name || row.Description
+
+      // Log for debugging
+      // log(`Found matching row in CSV: ${JSON.stringify(row)}`)
+
+      // If the FileURL or Path matches the old path, replace with the new record, otherwise keep the row as is
+      if (rowPath === oldNormalizedPath) {
+        return newRecord
+      } else {
+        return {
+          Name: rowName,
+          Path: rowPath,
+          Category: row.Category
+        }
+      }
     })
-    log(`Updated CSV Data: ${JSON.stringify(updatedCsvData)}`)
+
+    // Log updated CSV data for debugging
+    // log(`Updated CSV Data: ${JSON.stringify(updatedCsvData)}`)
+
+    // Write the updated CSV data back to the file
     await refreshCsvData(csvFilePath, updatedCsvData)
+
   } catch (e) {
+    // Log any errors that occur during the process
     log(`Error updating CSV: ${e}`)
   }
 }
+
 
 
 /**
@@ -357,7 +381,8 @@ async function refreshCsvData(csvFilePath, csvData){
 
     const formattedData = csvData.map(row => ({ // map array with new formatted data
       Name: row.Name,
-      Path: row.Path.replace(/^\//, ""), // fix url issues
+      Path: row.Path ? row.Path.replace(/^\//, "") : "",
+      // Path: row.Path.replace(/^\//, ""), // fix url issues
       Category: formatCategory(row.Category)
     }))
     .filter(row => row !== null && row.Name && row.Path) // filter to remove blank lines
