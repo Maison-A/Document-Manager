@@ -137,6 +137,7 @@ export default createStore({
   */
   async updateDocument({ commit }, { documentId, updateData }) {
     try {
+      
       // Clean up the title and append .pdf
       updateData.title = setFileTitle(updateData)
       const response = await axios.post(`/docs/update/${documentId}`, updateData)

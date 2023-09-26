@@ -242,23 +242,32 @@ function readCsv(csvFilePath, baseDir, category){
  * @param {string} category - The category to filter CSV data for.
  * @returns {Promise<Array>} - A Promise that resolves with an array of CSV data rows.
  */
-async function updateCsv({ csvFilePath, baseDir, updatedDocument }) {
+async function updateCsv({ csvFilePath, baseDir, updatedDocument, oldFileUrl }) {
   try {
     const csvData = await readCsv(csvFilePath, baseDir)
-    const normalizedPath = updatedDocument.fileUrl.replace(/^\//, '').replace(/\//g, '\\')
+    
+    // Normalize the old and new file URLs
+    const oldNormalizedPath = oldFileUrl.replace(/^\//, '').replace(/\//g, '\\')
+    const newNormalizedPath = updatedDocument.fileUrl.replace(/^\//, '').replace(/\//g, '\\')
+
     const newRecord = {
       Description: updatedDocument.description || '',
-      FileURL: normalizedPath,
+      FileURL: newNormalizedPath,
       Category: updatedDocument.category.toLowerCase(),
     }
-    
-    const updatedCsvData = csvData.map(row => row.FileURL === normalizedPath ? newRecord : row)
-    
+
+    // Replace the old record with the new one in the CSV data array
+    const updatedCsvData = csvData.map(row => {
+      log(`Found matching row in CSV: ${JSON.stringify(row)}`)
+      return row.FileURL === oldNormalizedPath ? newRecord : row
+    })
+    log(`Updated CSV Data: ${JSON.stringify(updatedCsvData)}`)
     await refreshCsvData(csvFilePath, updatedCsvData)
   } catch (e) {
     log(`Error updating CSV: ${e}`)
   }
 }
+
 
 /**
  * Name: writeCsv
