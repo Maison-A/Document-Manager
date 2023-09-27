@@ -20,6 +20,8 @@ export default createStore({
     pdfSrc: '',
     categories: ['signatures', 'supporting documents'],
     currentDocument:{},
+    user: null,
+    authToken: null,
   },
   
   getters: {
@@ -27,6 +29,13 @@ export default createStore({
       return state.currentDocument
     },
     
+    isAuthenticated(state){
+      return !!state.user
+    },
+    
+    getAuthToken(state){
+      return state.authToken
+    },
   },
   
   mutations: {
@@ -63,6 +72,14 @@ export default createStore({
       {
         log('>> ERROR: Document not found in state <<')
       }
+    },
+    
+    setUser(state, user){
+      state.user = user
+    },
+    
+    setAuthToken(state, token){
+      state.authToken = token
     },
   },
   
@@ -183,7 +200,26 @@ export default createStore({
     setPdfSrc({commit}, payload){
       commit('setPdfSrc', payload)
     },
-  },
+    
+    /**
+     * Name: deleteDocument
+     * Desc: 
+     * @param {}  - 
+     * @returns {}  - 
+    */
+    async loginUser({ commit }, payload) {  
+      try{
+        const res = await axios.post('/user/login', payload)
+        if(res.data.token){
+          commit('setAuthToken', res.data.token)
+          commit('setUser', payload.email)
+          localStorage.setItem('authToken', res.data.token)
+        }
+      }
+      catch(e){
+        log(`>>ERROR in loginUser ${e}<<`)
+      }
+    },
   
   modules: {
   }
