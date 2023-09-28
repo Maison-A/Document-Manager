@@ -7,7 +7,7 @@ form(@submit.prevent="login")
 </template>
 
 <script>
-import axios from 'axios'
+import { useStore } from 'vuex'
 
 export default {
   data() {
@@ -17,18 +17,12 @@ export default {
     }
   },
   methods: {
-    async login() {
-      try {
-        // Post request to your API to validate the user.
-        const res = await axios.post('/user/login', {
-          email: this.email,
-          password: this.password
-        })
-        // Assume the API responds with a token to be saved.
-        localStorage.setItem('token', res.data.token)
-      } catch (err) {
-        console.error('An error occurred during login:', err)
+    login() {
+      const payload = {
+        email: this.email,
+        password: this.password
       }
+      this.$store.dispatch('loginUser', payload)
     }
   }
 }
