@@ -20,6 +20,8 @@ export default createStore({
     pdfSrc: '',
     categories: ['signatures', 'supporting documents'],
     currentDocument:{},
+    user: null,
+    authToken: null,
   },
   
   getters: {
@@ -27,6 +29,13 @@ export default createStore({
       return state.currentDocument
     },
     
+    isAuthenticated(state){
+      return !!state.user
+    },
+    
+    getAuthToken(state){
+      return state.authToken
+    },
   },
   
   mutations: {
@@ -63,6 +72,14 @@ export default createStore({
       {
         log('>> ERROR: Document not found in state <<')
       }
+    },
+    
+    setUser(state, user){
+      state.user = user
+    },
+    
+    setAuthToken(state, token){
+      state.authToken = token
     },
   },
   
@@ -129,62 +146,94 @@ export default createStore({
     },
   
     
-  /**
-   * Name: updateDocument
-   * Desc: 
-   * @param {}  - 
-   * @returns {}  - 
-  */
-  async updateDocument({ commit }, { documentId, updateData }) {
-    try {
-      
-      // Clean up the title and append .pdf
-      updateData.title = setFileTitle(updateData)
-      const response = await axios.post(`/docs/update/${documentId}`, updateData)
-      
-      if (response.data.message.includes('updated successfully')) {
-        log(`Store - UpdateDocument() response -  response.data.updatedDocument: ${JSON.stringify(response.data.updatedDocument, null, 2)}`)
-        
-        commit('updateDocumentInState', response.data.updatedDocument) // update state with the new document data
-        
-        this.dispatch('fetchAllDocuments') // hard reload to ensure data consistency
-      }
-    } catch (e) {
-      console.log(`Error in updateDocument: ${e}`)
-    }
-  },
-  
-  
-
-  /**
-   * Name: deleteDocument
-   * Desc: 
-   * @param {}  - 
-   * @returns {}  - 
-  */
-    async deleteDocument({commit}, documentId){
+    /**
+     * Name: updateDocument
+     * Desc: 
+     * @param {}  - 
+     * @returns {}  - 
+    */
+    async updateDocument({ commit }, { documentId, updateData }) {
       try {
-        const response = await axios.delete(`/docs/delete/${documentId}`);
-        if (response.data.message === 'Document deleted') {
-          commit('deleteDocument', documentId) // Update Vuex state
-          this.dispatch('fetchAllDocuments') // hard reload
+        
+        // Clean up the title and append .pdf
+        updateData.title = setFileTitle(updateData)
+        const response = await axios.post(`/docs/update/${documentId}`, updateData)
+        
+        if (response.data.message.includes('updated successfully')) {
+          log(`Store - UpdateDocument() response -  response.data.updatedDocument: ${JSON.stringify(response.data.updatedDocument, null, 2)}`)
+          
+          commit('updateDocumentInState', response.data.updatedDocument) // update state with the new document data
+          
+          this.dispatch('fetchAllDocuments') // hard reload to ensure data consistency
         }
-      } catch(e){
-        log(`>>ERROR in delete documents ${e}<<`)
-        commit('deleteDocument', documentId)
+      } catch (e) {
+        console.log(`Error in updateDocument: ${e}`)
       }
     },
 
+    /**
+     * Name: deleteDocument
+     * Desc: 
+     * @param {}  - 
+     * @returns {}  - 
+    */
+      async deleteDocument({commit}, documentId){
+        try {
+          const response = await axios.delete(`/docs/delete/${documentId}`);
+          if (response.data.message === 'Document deleted') {
+            commit('deleteDocument', documentId) // Update Vuex state
+            this.dispatch('fetchAllDocuments') // hard reload
+          }
+        } catch(e){
+          log(`>>ERROR in delete documents ${e}<<`)
+          commit('deleteDocument', documentId)
+        }
+      },
+
+      
+      toggleModal({commit}, payload){
+        commit('toggleModal', payload)
+      },
+      
+      setPdfSrc({commit}, payload){
+        commit('setPdfSrc', payload)
+      },
     
-    toggleModal({commit}, payload){
-      commit('toggleModal', payload)
+      /**
+       * Name: 
+       * Desc: 
+       * @param {}  - 
+       * @returns {}  - 
+      */
+      async loginUser({ commit }, payload) {  
+        try{
+          const res = await axios.post('/user/login', payload)
+          if(res.data.token){
+            commit('setAuthToken', res.data.token)
+            commit('setUser', payload.email)
+            localStorage.setItem('authToken', res.data.token)
+          }
+        } catch(e){
+          log(`>>ERROR in loginUser ${e}<<`)
+        }
+      },
+      
+      async createUser({ commit }, payload) {
+        try{
+          const res = await axios.post('/user/signup', payload)
+          if(res.data.token){
+            commit('setAuthToken', res.data.token)
+            commit('setUser', payload.email)
+            localStorage.setItem('authToken', res.data.token)
+          }
+          else {
+            log('>>WARNING: Token not received<<')
+          }
+        } catch(e){
+          log(`>>ERROR in createUser ${e}<<`)
+        }
+      }
     },
-    
-    setPdfSrc({commit}, payload){
-      commit('setPdfSrc', payload)
-    },
-  },
-  
   modules: {
   }
 })
