@@ -3,7 +3,6 @@ import vHome from '../views/vHome.vue'
 import vNewDocument from '../views/vNewDocument.vue'
 import vPdfList from '../views/vPdfList.vue'
 
-
 const routes = [
   {
     path: '/',

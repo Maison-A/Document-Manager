@@ -27,7 +27,9 @@ div.center-form.container
         required
     )
         option(disabled value='') --Select Category--
-        option(v-for="category in categories" :key="category") {{ category }}
+        option(v-for="category in categories" 
+          :key="category"
+        ) {{ category }}
   div
     button.btn.btn-success(@click="submitForm") Submit
         

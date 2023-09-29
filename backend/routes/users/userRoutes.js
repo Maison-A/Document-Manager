@@ -7,11 +7,20 @@ const { log } = require('../../../utils/generalUtils')
 const router = express.Router()
 router.use(bodyParser.json())
 
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body
   
-  // Normally you'd fetch user from the database and compare hashed passwords
-  if (email === dummyUser.email && password === dummyUser.password) {
+  // Fetch the user from the database
+  const user = await UserModel.findOne({ email })
+  
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid credentials' })
+  }
+  
+  // Compare the hashed passwords
+  const isMatch = await bcrypt.compare(password, user.password)
+  
+  if (isMatch) {
     const token = jwt.sign({ email }, 'yourSecretKey', { expiresIn: '1h' })
     res.json({ token })
   } else {

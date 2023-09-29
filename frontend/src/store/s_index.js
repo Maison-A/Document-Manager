@@ -205,16 +205,16 @@ export default createStore({
        * @param {}  - 
        * @returns {}  - 
       */
-      async loginUser({ commit }, payload) {  
-        try{
+      async loginUser({ commit }, payload) {
+        try {
           const res = await axios.post('/user/login', payload)
-          if(res.data.token){
+          if (res.data.token) {
             commit('setAuthToken', res.data.token)
             commit('setUser', payload.email)
             localStorage.setItem('authToken', res.data.token)
           }
-        } catch(e){
-          log(`>>ERROR in loginUser ${e}<<`)
+        } catch (e) {
+          console.log(`>>ERROR in loginUser ${e}<<`)
         }
       },
       
