@@ -1,38 +1,36 @@
 <template lang="pug">
-div.center-form.container
-  div.form-row
-    div.form-group.col-md-6
-      label(for='documentTitle') Title of document
-      input.form-control(
-        id="documentTitle",
-        placeholder="Enter Title",
-        v-model="document.title"
-      )
-      small(id="titleTag") A default roman numeral titled document will be generated otherwise
-      
-      label(for="documentDescription") Description of Document
-      input.form-control(
-        id='documentDescription',
-        placeholder="Enter Description",
-        v-model="document.description"
-      )
-      small.mb-3(id="titleTag") A default description will be generated otherwise
-      
-      select.form-select.form-control.mb-3(
-        :class="{ 'is-invalid': isCategoryInvalid }",
-        id='category',
-        aria-label="Category",
-        style="width:auto",
-        v-model="document.category",
-        required
-    )
-        option(disabled value='') --Select Category--
-        option(v-for="category in categories" 
-          :key="category"
-        ) {{ category }}
-  div
-    button.btn.btn-success(@click="submitForm") Submit
-        
+div.container
+  div.row.justify-content-center
+    div.col-md-6
+      div.form-group
+        label(for='documentTitle') Title of document
+        input.form-control(
+          id="documentTitle",
+          placeholder="Enter Title",
+          v-model="document.title"
+        )
+        small.form-text.text-muted(id="titleTag") A default roman numeral titled document will be generated otherwise
+      div.form-group
+        label(for='documentDescription') Description of Document
+        input.form-control(
+          id="documentDescription",
+          placeholder="Enter Description",
+          v-model="document.description"
+        )
+        small.form-text.text-muted(id="titleTag") A default description will be generated otherwise
+      div.form-group
+        select.form-control(
+          :class="{ 'is-invalid': isCategoryInvalid }",
+          id='category',
+          v-model="document.category",
+          required
+        )
+          option(disabled value='') --Select Category--
+          option(v-for="category in categories" 
+            :key="category"
+          ) {{ category }}
+      div.form-group
+        button.btn.btn-success(@click="submitForm") Submit 
 </template>
 
 <script>
