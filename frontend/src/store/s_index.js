@@ -191,14 +191,31 @@ export default createStore({
       },
 
       
+      
+      /**
+       * Name: 
+       * Desc: 
+       * @param {}  - 
+       * @returns {}  - 
+      */      
       toggleModal({commit}, payload){
         commit('toggleModal', payload)
       },
       
+      
+      
+      /**
+       * Name: 
+       * Desc: 
+       * @param {}  - 
+       * @returns {}  - 
+      */     
       setPdfSrc({commit}, payload){
         commit('setPdfSrc', payload)
       },
     
+      
+      
       /**
        * Name: 
        * Desc: 
@@ -218,6 +235,14 @@ export default createStore({
         }
       },
       
+      
+      
+      /**
+       * Name: 
+       * Desc: 
+       * @param {}  - 
+       * @returns {}  - 
+      */
       async createUser({ commit }, payload) {
         try{
           const res = await axios.post('/user/signup', payload)
