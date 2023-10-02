@@ -1,6 +1,6 @@
 <template lang="pug">
 div.home
-  h1(v-if="loggedIn") Welcome, #{username}!
+  h1(v-if="loggedIn") Welcome, {{user.username}}!
   div(v-else)
     h3 Log In
     LogInForm(ref="loginForm")
@@ -31,11 +31,11 @@ export default {
   computed: {
     ...mapState({
       loggedIn: state => state.loggedIn,
-      username: state => state.username
+      user: state => state.user  // get whole user object
     })
   },
-  methods:{
-    login(){
+  methods: {
+    login() {
       this.$refs.loginForm.login()
     }
   }

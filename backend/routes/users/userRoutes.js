@@ -12,7 +12,7 @@ router.use(bodyParser.json())
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
-    
+    // log(`Searching for email: ${email}`)
     // Fetch the user from the database
     const user = await UserModel.findOne({ email })
     
@@ -24,9 +24,16 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password)
     
     if (isMatch) {
+      // Remove sensitive data from user object
+      const safeUser = { ...user._doc }
+      delete safeUser.password
+
       const token = jwt.sign({ email }, 'yourSecretKey', { expiresIn: '1h' })
-      return res.json({ token })
-    } else {
+      
+      // Include the safe user object along with the token
+      return res.json({ token, user: safeUser })
+    } 
+    else {
       return res.status(401).json({ message: 'Password is incorrect' })
     }
   } catch (error) {
