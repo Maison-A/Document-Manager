@@ -13,8 +13,6 @@ div.container
             div.form-group
               label(for="login-password") Password
               input.form-control(v-model="password" type="password" id="login-password" placeholder="Enter password")
-
-
 </template>
 
 <script>

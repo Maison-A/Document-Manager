@@ -6,25 +6,39 @@ const UserModel = require('../../models/userModel')
 const { log } = require('../../../utils/generalUtils')
 const router = express.Router()
 router.use(bodyParser.json())
+// base route is '/user'
+
 
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body
-  
-  // Fetch the user from the database
-  const user = await UserModel.findOne({ email })
-  
-  if (!user) {
-    return res.status(401).json({ message: 'Invalid credentials' })
-  }
-  
-  // Compare the hashed passwords
-  const isMatch = await bcrypt.compare(password, user.password)
-  
-  if (isMatch) {
-    const token = jwt.sign({ email }, 'yourSecretKey', { expiresIn: '1h' })
-    res.json({ token })
-  } else {
-    res.status(401).json({ message: 'Invalid credentials' })
+  try {
+    const { email, password } = req.body
+    // log(`Searching for email: ${email}`)
+    // Fetch the user from the database
+    const user = await UserModel.findOne({ email })
+    
+    if (!user) {
+      return res.status(401).json({ message: 'Email not found' })
+    }
+    
+    // Compare the hashed passwords
+    const isMatch = await bcrypt.compare(password, user.password)
+    
+    if (isMatch) {
+      // Remove sensitive data from user object
+      const safeUser = { ...user._doc }
+      delete safeUser.password
+
+      const token = jwt.sign({ email }, 'yourSecretKey', { expiresIn: '1h' })
+      
+      // Include the safe user object along with the token
+      return res.json({ token, user: safeUser })
+    } 
+    else {
+      return res.status(401).json({ message: 'Password is incorrect' })
+    }
+  } catch (error) {
+    console.log(`Error in login: ${error}`)
+    return res.status(500).json({ message: 'Internal Server Error' })
   }
 })
 

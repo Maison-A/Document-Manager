@@ -21,7 +21,7 @@ export default createStore({
     categories: ['signatures', 'supporting documents'],
     currentDocument:{},
     user: null,
-    authToken: null,
+    loggedIn: false,
   },
   
   getters: {
@@ -30,7 +30,7 @@ export default createStore({
     },
     
     isAuthenticated(state){
-      return !!state.user
+      return !!state.user // turn the value into a boolean. check if token exists. returns true to indicate the user is authenticated; otherwise, false.
     },
     
     getAuthToken(state){
@@ -78,9 +78,9 @@ export default createStore({
       state.user = user
     },
     
-    setAuthToken(state, token){
-      state.authToken = token
-    },
+    setLoggedIn(state, loggedIn){
+      state.loggedIn = loggedIn
+    }
   },
   
   actions: {
@@ -191,14 +191,31 @@ export default createStore({
       },
 
       
+      
+      /**
+       * Name: 
+       * Desc: 
+       * @param {}  - 
+       * @returns {}  - 
+      */      
       toggleModal({commit}, payload){
         commit('toggleModal', payload)
       },
       
+      
+      
+      /**
+       * Name: 
+       * Desc: 
+       * @param {}  - 
+       * @returns {}  - 
+      */     
       setPdfSrc({commit}, payload){
         commit('setPdfSrc', payload)
       },
     
+      
+      
       /**
        * Name: 
        * Desc: 
@@ -209,15 +226,25 @@ export default createStore({
         try {
           const res = await axios.post('/user/login', payload)
           if (res.data.token) {
-            commit('setAuthToken', res.data.token)
-            commit('setUser', payload.email)
-            localStorage.setItem('authToken', res.data.token)
+            const { token, user } = res.data
+            commit('setUser', user) // Set the whole user object
+            log(`Logged in as [username]: ${user.username}`) // debugging
+            commit('setLoggedIn', true)
+            localStorage.setItem('authToken', token)
           }
         } catch (e) {
           console.log(`>>ERROR in loginUser ${e}<<`)
         }
       },
       
+      
+      
+      /**
+       * Name: 
+       * Desc: 
+       * @param {}  - 
+       * @returns {}  - 
+      */
       async createUser({ commit }, payload) {
         try{
           const res = await axios.post('/user/signup', payload)
