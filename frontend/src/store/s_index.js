@@ -216,12 +216,13 @@ export default createStore({
     
       
       
-      /**
-       * Name: 
-       * Desc: 
-       * @param {}  - 
-       * @returns {}  - 
-      */
+    /**
+     * Name: loginUser
+     * Desc: Handles user login.
+     * @param {Object} commit - Vuex commit object for calling mutations
+     * @param {Object} payload - Login credentials
+     * @returns {void} - logs user in, updates store state, or logs an error
+     */
       async loginUser({ commit }, payload) {
         try {
           const res = await axios.post('/user/login', payload)
@@ -239,12 +240,13 @@ export default createStore({
       
       
       
-      /**
-       * Name: 
-       * Desc: 
-       * @param {}  - 
-       * @returns {}  - 
-      */
+    /**
+     * Name: createUser
+     * Desc: Handles user signup.
+     * @param {Object} commit - Vuex commit object for calling mutations
+     * @param {Object} payload - Signup credentials
+     * @returns {void} - creates a user, updates store state, or logs an error
+     */
       async createUser({ commit }, payload) {
         try{
           const res = await axios.post('/user/signup', payload)
