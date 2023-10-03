@@ -2,7 +2,15 @@ import { createStore } from 'vuex'
 const { log } = require('../../../utils/generalUtils')
 const axios = require('axios')
 axios.defaults.baseURL = 'http://localhost:3000/'
-      
+axios.defaults.withCredentials = true
+
+
+axios.interceptors.request.use(config => {
+  config.headers.Authorization = `Bearer ${localStorage.getItem('authToken')}`
+  return config
+})
+
+
 function setFileTitle(inputData){
   let fileTitle = inputData.title
   .trim()
@@ -13,6 +21,7 @@ function setFileTitle(inputData){
   }
   return fileTitle
 }
+
 export default createStore({
   state: {
     documents: [],
@@ -20,7 +29,7 @@ export default createStore({
     pdfSrc: '',
     categories: ['signatures', 'supporting documents'],
     currentDocument:{},
-    user: null,
+    user:  null, // get user from cookie
     loggedIn: false,
   },
   
@@ -74,13 +83,26 @@ export default createStore({
       }
     },
     
-    setUser(state, user){
+    setUser(state, user) {
       state.user = user
+      document.cookie = `user=${JSON.stringify(user)}; expires=${new Date(Date.now() + 86400000).toUTCString()}; path=/` // save user to cookie
     },
     
     setLoggedIn(state, loggedIn){
       state.loggedIn = loggedIn
-    }
+    },
+    
+    logoutUser(state) {
+      state.user = null
+      document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' // clear user cookie
+      axios.post('/user/logout') // Replace with your actual API endpoint to clear the server-side session
+        .then(() => {
+          state.loggedIn = false
+        })
+        .catch((error) => {
+          console.error(error)
+        });
+    },
   },
   
   actions: {
@@ -99,7 +121,7 @@ export default createStore({
         commit('setDocuments',[]) // clear array
       }
     },
-    
+
     
     
     /**
@@ -171,49 +193,51 @@ export default createStore({
       }
     },
 
+    
+    
     /**
      * Name: deleteDocument
      * Desc: 
      * @param {}  - 
      * @returns {}  - 
     */
-      async deleteDocument({commit}, documentId){
-        try {
-          const response = await axios.delete(`/docs/delete/${documentId}`);
-          if (response.data.message === 'Document deleted') {
-            commit('deleteDocument', documentId) // Update Vuex state
-            this.dispatch('fetchAllDocuments') // hard reload
-          }
-        } catch(e){
-          log(`>>ERROR in delete documents ${e}<<`)
-          commit('deleteDocument', documentId)
+    async deleteDocument({commit}, documentId){
+      try {
+        const response = await axios.delete(`/docs/delete/${documentId}`);
+        if (response.data.message === 'Document deleted') {
+          commit('deleteDocument', documentId) // Update Vuex state
+          this.dispatch('fetchAllDocuments') // hard reload
         }
-      },
+      } catch(e){
+        log(`>>ERROR in delete documents ${e}<<`)
+        commit('deleteDocument', documentId)
+      }
+    },
 
       
       
-      /**
-       * Name: 
-       * Desc: 
-       * @param {}  - 
-       * @returns {}  - 
-      */      
-      toggleModal({commit}, payload){
-        commit('toggleModal', payload)
-      },
-      
-      
-      
-      /**
-       * Name: 
-       * Desc: 
-       * @param {}  - 
-       * @returns {}  - 
-      */     
-      setPdfSrc({commit}, payload){
-        commit('setPdfSrc', payload)
-      },
+    /**
+     * Name: 
+     * Desc: 
+     * @param {}  - 
+     * @returns {}  - 
+    */      
+    toggleModal({commit}, payload){
+      commit('toggleModal', payload)
+    },
     
+      
+      
+    /**
+     * Name: 
+     * Desc: 
+     * @param {}  - 
+     * @returns {}  - 
+    */     
+    setPdfSrc({commit}, payload){
+      commit('setPdfSrc', payload)
+    },
+  
       
       
     /**
@@ -223,20 +247,20 @@ export default createStore({
      * @param {Object} payload - Login credentials
      * @returns {void} - logs user in, updates store state, or logs an error
      */
-      async loginUser({ commit }, payload) {
-        try {
-          const res = await axios.post('/user/login', payload)
-          if (res.data.token) {
-            const { token, user } = res.data
-            commit('setUser', user) // Set the whole user object
-            log(`Logged in as [username]: ${user.username}`) // debugging
-            commit('setLoggedIn', true)
-            localStorage.setItem('authToken', token)
-          }
-        } catch (e) {
-          console.log(`>>ERROR in loginUser ${e}<<`)
+    async loginUser({ commit }, payload) {
+      try {
+        const res = await axios.post('/user/login', payload)
+        if (res.data.token) {
+          const { token, user } = res.data
+          commit('setUser', user) // Set the whole user object
+          // log(`Logged in as [username]: ${user.username}`) // debug
+          commit('setLoggedIn', true)
+          localStorage.setItem('authToken', token)
         }
-      },
+      } catch (e) {
+        console.log(`>>ERROR in loginUser ${e}<<`)
+      }
+    },
       
       
       
@@ -247,22 +271,65 @@ export default createStore({
      * @param {Object} payload - Signup credentials
      * @returns {void} - creates a user, updates store state, or logs an error
      */
-      async createUser({ commit }, payload) {
-        try{
-          const res = await axios.post('/user/signup', payload)
-          if(res.data.token){
-            commit('setAuthToken', res.data.token)
-            commit('setUser', payload.email)
-            localStorage.setItem('authToken', res.data.token)
-          }
-          else {
-            log('>>WARNING: Token not received<<')
-          }
-        } catch(e){
-          log(`>>ERROR in createUser ${e}<<`)
+    async createUser({ commit }, payload) {
+      try{
+        const res = await axios.post('/user/signup', payload)
+        if(res.data.token){
+          commit('setAuthToken', res.data.token)
+          commit('setUser', payload.email)
+          localStorage.setItem('authToken', res.data.token)
         }
+        else {
+          log('>>WARNING: Token not received<<')
+        }
+      } catch(e){
+        log(`>>ERROR in createUser ${e}<<`)
       }
     },
+    
+    
+    /**
+     * Name: 
+     * Desc: 
+     * @param {Object} commit - 
+     * @param {Object} payload - 
+     * @returns {void} -
+    */
+    async loadUserFromCookie({ commit }) {
+      try {
+        const res = await axios.get('/user/current') // Replace with your actual API endpoint
+        commit('setUser', res.data.user)
+        commit('setLoggedIn', true)
+      } catch (e) {
+        console.log(`>>ERROR in loadUserFromCookie ${e}<<`);
+      }
+    },
+    
+    
+    logout({ commit }) {
+      commit('logoutUser')
+    },
+    
+  },
+  
   modules: {
+  },
+
+// initialize the user state from the cookie
+// handle the error if the cookie is empty or invalid
+// set the loggedIn state based on the user state
+// use a try-catch block to handle the JSON.parse error
+async init({ commit }) {
+  try {
+    const userCookie = document.cookie.replace(/(?:(?:^|.*;\s*)user\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    if (userCookie) {
+      const user = JSON.parse(userCookie);
+      commit('setUser', user);
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    commit('setLoggedIn', !!state.user);
   }
+}
 })

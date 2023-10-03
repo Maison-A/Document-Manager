@@ -7,6 +7,9 @@ import NavBar from '../src/components/NavBar.vue'
 export default {
   components:{
     NavBar
+  },
+  created(){
+    this.$store.dispatch('loadUserFromCookie')
   }
 }
 </script>

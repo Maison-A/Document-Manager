@@ -3,59 +3,61 @@ const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const UserModel = require('../../models/userModel')
-const { log } = require('../../../utils/generalUtils')
+const authenticateJWT = require('../../middlewares/authenticateJWT')
+const generateSecretKey = require('../../middlewares/generateSecretKey')
 const router = express.Router()
-router.use(bodyParser.json())
-// base route is '/user'
 
+router.use(bodyParser.json())
+
+// Use the middleware on specific routes where needed
+// router.use(authenticateJWT)  
 
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
-    // log(`Searching for email: ${email}`)
-    // Fetch the user from the database
     const user = await UserModel.findOne({ email })
     
     if (!user) {
       return res.status(401).json({ message: 'Email not found' })
     }
-    
-    // Compare the hashed passwords
-    const isMatch = await bcrypt.compare(password, user.password)
-    
-    if (isMatch) {
-      // Remove sensitive data from user object
-      const safeUser = { ...user._doc }
-      delete safeUser.password
-
-      const token = jwt.sign({ email }, 'yourSecretKey', { expiresIn: '1h' })
-      
-      // Include the safe user object along with the token
-      return res.json({ token, user: safeUser })
-    } 
-    else {
-      return res.status(401).json({ message: 'Password is incorrect' })
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+    if (!isPasswordValid) {
+      return res.status(401).send('Invalid password')
     }
-  } catch (error) {
-    console.log(`Error in login: ${error}`)
-    return res.status(500).json({ message: 'Internal Server Error' })
+    
+    const secretKey = generateSecretKey()
+    const token = jwt.sign({ id: user.id, email }, secretKey, { expiresIn: '1h' })
+    
+    if (isPasswordValid) {
+      const safeUser = { ...user._doc } // create new user object without password - safer to send to client
+      delete safeUser.password
+    } else {
+      return res.status(401).json({ message: 'Password is incorrect' })
+    } 
+    
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict'
+    })
+    res.status(200).json({ token })
+    return res.json({ token, user: safeUser })
+    }catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' })
   }
 })
 
 router.post('/signup', async (req, res) => {
   const { email, password, username } = req.body
-  
-  // Check if the email already exists in the database
   const existingUser = await UserModel.findOne({ email })
+  
   if (existingUser) {
     return res.status(400).json({ message: 'Email already exists' })
   }
-  
-  // Hash the password
+
   const saltRounds = 10
   const hashedPassword = await bcrypt.hash(password, saltRounds)
-  
-  // Create a new user
+
   const newUser = new UserModel({
     email,
     password: hashedPassword,
@@ -63,17 +65,29 @@ router.post('/signup', async (req, res) => {
   })
 
   try {
-    // Save to the database
     await newUser.save()
-    
-    // Generate a token
-    const token = jwt.sign({ email }, 'yourSecretKey', { expiresIn: '1h' })
-    
-    // Respond with the token
-    res.status(201).json({ token, message: 'User created successfully' })
+    const token = jwt.sign({ id: newUser._id, email }, 'yourSecretKey', { expiresIn: '1h' })
+    return res.status(201).json({ token, message: 'User created successfully' })
   } catch (error) {
-    res.status(500).json({ message: 'Error creating user', error })
+    return res.status(500).json({ message: 'Error creating user', error })
   }
 })
 
-module.exports = router  // Export the router instance
+
+router.post('/logout', async (req, res) => {
+  try {
+    // Clear the user session
+    req.session.destroy((error) => {
+      if (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+      } else {
+        res.status(200).send('Logged out successfully');
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+module.exports = router

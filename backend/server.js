@@ -10,6 +10,9 @@
 const express = require('express')
 require('dotenv').config() // access env
 
+// Import the middleware
+const authenticateJWT = require('./middlewares/authenticateJWT')
+
 // initialize helpers
 const cookieParser = require('cookie-parser') // initialize parser
 const cors = require('cors') // initialize CORS (for all routes on Express server)
@@ -22,7 +25,12 @@ const fs = require('fs');
 const app = express() // set as var
 
 // execute helpers
-app.use(cors()) // execute cors
+app.use(cors(  
+  {
+    origin: 'http://localhost:8080',  // frontend origin
+    credentials: true
+  }
+)) // execute cors
 app.use(morgan('tiny')) // execute morgan
 app.use(cookieParser()) // execute cookieParser
 
@@ -53,5 +61,5 @@ mongoose.connect('mongodb://localhost:27017/pdfStorage')
   })
 
 // Define API endpoint
-app.use('/docs', docRoutes)
+app.use('/docs',authenticateJWT, docRoutes)
 app.use('/user', userRoutes)
