@@ -43,6 +43,13 @@ export default {
     login() {
       this.$refs.loginForm.login()
     }
+  },
+  created() {
+    this.$store.dispatch('loadUserFromCookie')
+      .catch(error => {
+        console.error('Error loading user from cookie:', error)
+        // Handle the error here, e.g. show an error message to the user
+      })
   }
 }
 </script>

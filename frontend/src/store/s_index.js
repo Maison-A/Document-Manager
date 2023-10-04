@@ -288,27 +288,38 @@ export default createStore({
     },
     
     
+
     /**
-     * Name: 
-     * Desc: 
-     * @param {Object} commit - 
-     * @param {Object} payload - 
-     * @returns {void} -
-    */
+     * Loads the user data from the server using the token stored in the cookie.
+     * If the token is invalid or expired, removes the token from the cookie and sets the user to null.
+     * @param {Object} commit - The Vuex commit function.
+     * @returns {Promise<Object>} - A Promise that resolves with the loaded user data.
+     * @throws {Error} - If the token is not found in the cookie or an error occurs while loading the user data.
+     */
     async loadUserFromCookie({ commit }) {
-      try {
-        const res = await axios.get('/user/current') // Replace with your actual API endpoint
-        commit('setUser', res.data.user)
-        commit('setLoggedIn', true)
-      } catch (e) {
-        console.log(`>>ERROR in loadUserFromCookie ${e}<<`);
+      const token = Cookies.get('token') // Get the token from the cookie
+      if (!token) {
+        return Promise.reject(new Error('No token found in cookie')) // If the token is not found, reject the Promise with an error
       }
-    },
-    
-    
-    logout({ commit }) {
-      commit('logoutUser')
-    },
+      try {
+        const response = await axios.get('/user/:id', { // Send a GET request to the server to get the user data
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const user = response.data
+        commit('setUser', user) // Update the user state with the loaded user data
+        return Promise.resolve(user) // Resolve the Promise with the loaded user data
+      } catch (error) {
+        if (error.response && error.response.status === 401) { // If the server responds with a 401 status code, the token is invalid or expired
+          // Remove the token from the cookie and set the user to null
+          Cookies.remove('token')
+          commit('setUser', null)
+          return Promise.reject(new Error('Token is invalid or expired')) // reject the Promise with an error
+        } else {
+          
+          return Promise.reject(error) // If an error occurs while loading the user data, reject the Promise with the error
+        }
+      }
+    }
     
   },
   

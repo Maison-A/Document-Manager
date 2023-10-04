@@ -8,9 +8,6 @@ export default {
   components:{
     NavBar
   },
-  created(){
-    this.$store.dispatch('loadUserFromCookie')
-  }
 }
 </script>
 <style lang="scss">

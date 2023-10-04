@@ -14,6 +14,7 @@ require('dotenv').config() // access env
 const authenticateJWT = require('./middlewares/authenticateJWT')
 
 // initialize helpers
+const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser') // initialize parser
 const cors = require('cors') // initialize CORS (for all routes on Express server)
 const morgan = require('morgan') // initialize morgan logger
@@ -34,12 +35,14 @@ app.use(cors(
 app.use(morgan('tiny')) // execute morgan
 app.use(cookieParser()) // execute cookieParser
 
+app.use(bodyParser.json()) // execute bodyParser
+app.use(bodyParser.urlencoded({ extended: true })) // execute bodyParser
 // serve files from this path
 // app.use('/static', express.static('../../../Docs'))
 app.use('/Docs', express.static(path.join(__dirname,'../Docs')))
 
 // set connection vars
-const url = process.env.DB_URL || 'mongodb://localhost:27017/pdfStorage'
+// const url = process.env.DB_URL || 'mongodb://localhost:27017/pdfStorage'
 
 // import routes
 const docRoutes = require('./routes/documents/docRoutes.js')
