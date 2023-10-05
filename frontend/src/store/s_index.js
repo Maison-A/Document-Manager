@@ -1,8 +1,21 @@
 import { createStore } from 'vuex'
+import Cookies from 'js-cookie'
 const { log } = require('../../../utils/generalUtils')
 const axios = require('axios')
 axios.defaults.baseURL = 'http://localhost:3000/'
-      
+axios.defaults.withCredentials = true
+
+
+// axios.interceptors.request.use(config => {
+//   config.headers.Authorization = `Bearer ${localStorage.getItem('authToken')}`
+//   return config
+// })
+axios.interceptors.request.use(config => {
+  // No need to set Authorization header, cookie will be sent automatically
+  return config
+})
+
+
 function setFileTitle(inputData){
   let fileTitle = inputData.title
   .trim()
@@ -13,6 +26,7 @@ function setFileTitle(inputData){
   }
   return fileTitle
 }
+
 export default createStore({
   state: {
     documents: [],
@@ -20,7 +34,7 @@ export default createStore({
     pdfSrc: '',
     categories: ['signatures', 'supporting documents'],
     currentDocument:{},
-    user: null,
+    user:  null, // get user from cookie
     loggedIn: false,
   },
   
@@ -74,13 +88,22 @@ export default createStore({
       }
     },
     
-    setUser(state, user){
+    setUser(state, user) {
       state.user = user
+      document.cookie = `user=${JSON.stringify(user)}; expires=${new Date(Date.now() + 86400000).toUTCString()}; path=/` // save user to cookie
     },
     
     setLoggedIn(state, loggedIn){
       state.loggedIn = loggedIn
-    }
+    },
+    
+    // Mutation to clear user info - DO NOT use async in mutations
+    logoutUser(state) {
+      state.user = null // reset user state
+      document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' // clear user cookie
+      state.loggedIn = false // reset loggedIn state
+      // need to clear token from cookie/session (is there a difference?)
+    },
   },
   
   actions: {
@@ -99,7 +122,7 @@ export default createStore({
         commit('setDocuments',[]) // clear array
       }
     },
-    
+
     
     
     /**
@@ -171,96 +194,161 @@ export default createStore({
       }
     },
 
+    
+    
     /**
      * Name: deleteDocument
      * Desc: 
      * @param {}  - 
      * @returns {}  - 
     */
-      async deleteDocument({commit}, documentId){
-        try {
-          const response = await axios.delete(`/docs/delete/${documentId}`);
-          if (response.data.message === 'Document deleted') {
-            commit('deleteDocument', documentId) // Update Vuex state
-            this.dispatch('fetchAllDocuments') // hard reload
-          }
-        } catch(e){
-          log(`>>ERROR in delete documents ${e}<<`)
-          commit('deleteDocument', documentId)
+    async deleteDocument({commit}, documentId){
+      try {
+        const response = await axios.delete(`/docs/delete/${documentId}`);
+        if (response.data.message === 'Document deleted') {
+          commit('deleteDocument', documentId) // Update Vuex state
+          this.dispatch('fetchAllDocuments') // hard reload
         }
-      },
+      } catch(e){
+        log(`>>ERROR in delete documents ${e}<<`)
+        commit('deleteDocument', documentId)
+      }
+    },
 
       
       
-      /**
-       * Name: 
-       * Desc: 
-       * @param {}  - 
-       * @returns {}  - 
-      */      
-      toggleModal({commit}, payload){
-        commit('toggleModal', payload)
-      },
-      
-      
-      
-      /**
-       * Name: 
-       * Desc: 
-       * @param {}  - 
-       * @returns {}  - 
-      */     
-      setPdfSrc({commit}, payload){
-        commit('setPdfSrc', payload)
-      },
+    /**
+     * Name: 
+     * Desc: 
+     * @param {}  - 
+     * @returns {}  - 
+    */      
+    toggleModal({commit}, payload){
+      commit('toggleModal', payload)
+    },
     
       
       
-      /**
-       * Name: 
-       * Desc: 
-       * @param {}  - 
-       * @returns {}  - 
-      */
-      async loginUser({ commit }, payload) {
-        try {
-          const res = await axios.post('/user/login', payload)
-          if (res.data.token) {
-            const { token, user } = res.data
-            commit('setUser', user) // Set the whole user object
-            log(`Logged in as [username]: ${user.username}`) // debugging
-            commit('setLoggedIn', true)
-            localStorage.setItem('authToken', token)
-          }
-        } catch (e) {
-          console.log(`>>ERROR in loginUser ${e}<<`)
+    /**
+     * Name: 
+     * Desc: 
+     * @param {}  - 
+     * @returns {}  - 
+    */     
+    setPdfSrc({commit}, payload){
+      commit('setPdfSrc', payload)
+    },
+  
+      
+      
+    /**
+     * Name: loginUser
+     * Desc: Handles user login.
+     * @param {Object} commit - Vuex commit object for calling mutations
+     * @param {Object} payload - Login credentials
+     * @returns {void} - logs user in, updates store state, or logs an error
+     */
+    async loginUser({ commit }, payload) {
+      try {
+        const res = await axios.post('/user/login', payload)
+        if (res.data.user) {
+          const { user } = res.data
+          commit('setUser', user) 
+          commit('setLoggedIn', true)
+          log(`username in state: ${this.state.user.username}`)
+          log(`email in state: ${this.state.user.email}`)
+          
         }
-      },
-      
-      
-      
-      /**
-       * Name: 
-       * Desc: 
-       * @param {}  - 
-       * @returns {}  - 
-      */
-      async createUser({ commit }, payload) {
-        try{
-          const res = await axios.post('/user/signup', payload)
-          if(res.data.token){
-            commit('setAuthToken', res.data.token)
-            commit('setUser', payload.email)
-            localStorage.setItem('authToken', res.data.token)
-          }
-          else {
-            log('>>WARNING: Token not received<<')
-          }
-        } catch(e){
-          log(`>>ERROR in createUser ${e}<<`)
-        }
+      } catch (e) {
+        console.log(`>>ERROR in loginUser ${e}<<`)
       }
     },
+      
+    // Action to handle user logout
+    async logoutUser({ commit }) {
+      try {
+        await axios.post('/user/logout') // This should clear the server-side cookie
+        commit('logoutUser')
+      } catch (error) {
+        console.error('Failed to logout:', error)
+      }
+    },
+
+      
+    /**
+     * Name: createUser
+     * Desc: Handles user signup.
+     * @param {Object} commit - Vuex commit object for calling mutations
+     * @param {Object} payload - Signup credentials
+     * @returns {void} - creates a user, updates store state, or logs an error
+     */
+    async createUser({ commit }, payload) {
+      try{
+        const res = await axios.post('/user/signup', payload)
+        if(res.data.token){
+          commit('setAuthToken', res.data.token)
+          commit('setUser', payload.email)
+          // localStorage.setItem('authToken', res.data.token)
+        }
+        else {
+          log('>>WARNING: Token not received<<')
+        }
+      } catch(e){
+        log(`>>ERROR in createUser ${e}<<`)
+      }
+    },
+    
+    
+    async fetchUser({ commit }) {
+      try {
+        const config = {
+          withCredentials: true
+        }
+        const response = await axios.get('/user/me', config)
+        commit('setUser', response.data)
+      } catch (error) {
+        console.error('Failed to fetch user:', error)
+      }
+    },
+
+
+    /**
+     * Loads the user data from the server using the token stored in the cookie.
+     * If the token is invalid or expired, removes the token from the cookie and sets the user to null.
+     * @param {Object} commit - The Vuex commit function.
+     * @returns {Promise<Object>} - A Promise that resolves with the loaded user data.
+     * @throws {Error} - If the token is not found in the cookie or an error occurs while loading the user data.
+     */
+    async loadUserFromCookie({ commit }) {
+      const token = Cookies.get('token') // Get the token from the cookie
+      log(`loadUserFromCookie() token: ${token}`)
+      if (!token) {
+        return Promise.reject(new Error('No token found in cookie')) // If the token is not found, reject the Promise with an error
+      }
+      
+      try {
+        const response = await axios.get('/user/me', { // Send a GET request to the server to get the user data
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const user = response.data
+        commit('setUser', user) // update the user state with the loaded user data
+        
+        return Promise.resolve(user) // resolve the Promise with the loaded user data
+      } catch (e) {
+        if (e.response && e.response.status === 401) { // if the server responds with a 401 status code, the token is invalid or expired
+          
+          Cookies.remove('token') // remove the token from the cookie and set the user to null
+          commit('setUser', null)
+          
+          return Promise.reject(new Error('Token is invalid or expired')) // reject the Promise with an error
+        } else {
+          return Promise.reject(e) // if an error occurs while loading the user data, reject the Promise with the error
+        }
+      }
+    }
+    
+  },
+  
   modules: {
-  }
+  },
 })

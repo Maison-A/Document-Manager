@@ -28,3 +28,5 @@ noteToSelf.md
 Docs/
 temp.txt
 backend/seed.js
+backend/middlewares/authenticateJWT.js
+backend/middlewares/generateSecretKey.js

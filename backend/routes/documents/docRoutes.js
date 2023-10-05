@@ -3,13 +3,15 @@ const multer = require('multer')
 const bodyParser = require('body-parser')
 const router = express.Router()
 const path = require('path')
-const { log } = require('../../../utils/generalUtils')
 const Document = require('../../models/documentModel')
 const fs = require('fs') // file system needed to manage local documents
+const { log } = require('../../../utils/generalUtils')
+
 router.use(bodyParser.json())
 
 // import utils
 const {  createAndStoreDocument, readCsv, getStorageDir, getPrefix, deleteDocFromCsv, setFileTitle, updateCsv} = require('../../../utils/fileUtils.js')
+// const authenticateJWT = require('../../middlewares/authenticateJWT')
 
 // store generated docs
 const storage = multer.diskStorage({
@@ -49,15 +51,16 @@ router.post('/upload', upload.single('file'), (req, res) => {
 router.post('/create', async (req, res) => {
   console.log("Received body: ", req.body); 
   try {
-
     if (!req.body || !req.body.category) { // check if category returns
       return res.status(400).json({ error: 'Category must be selected' })
     }
+    const userId = req.user.id // Get user ID from JWT payload
     const { title, description, category } = req.body // access body
     const inputDoc = { // set doc values to be passed
       title: title,
       description: description,
-      category: category
+      category: category,
+      userId: userId // add user id to document
     }
     
     const result = await createAndStoreDocument(inputDoc) 
@@ -85,7 +88,10 @@ router.get('/all', async (req, res) => {
     
     const allCsvData = [...sdCsvData, ...sigCsvData]
     const documentPaths = allCsvData.map((row) => row.relativePath)
-    const matchingDocuments = await Document.find({ fileUrl: { $in: documentPaths } })
+    const matchingDocuments = await Document.find({ 
+      userId: req.user.id,
+      fileUrl: { $in: documentPaths } 
+    })
 
     // return data
     res.json(matchingDocuments)
@@ -108,6 +114,10 @@ router.get('/display/:id', async (req, res) => {
   try {
     const docToDisplay = await Document.findById(req.params.id)
     
+    if (docToDisplay.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Access denied' })
+    }
+
     const dirCategory = getPrefix(docToDisplay)
     const filePath = path.join(__dirname, `../../../Docs/${dirCategory}/${docToDisplay.title}`)
     
@@ -142,8 +152,9 @@ router.post('/update/:id', async (req, res) => {
   try {
       // First, find the existing document to capture oldFileUrl
       let existingDocument = await Document.findById(docId)
-      if (!existingDocument) {
-        return res.status(404).json({ error: 'Document not found' })
+      
+      if (!existingDocument || existingDocument.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Access denied' })
       }
   let oldFileUrl = existingDocument.fileUrl
   
@@ -195,11 +206,7 @@ router.post('/update/:id', async (req, res) => {
     res.status(500).json({ error: 'Error updating document' })
   }
 })
-/**Main changes are:
 
-Moved let oldFileUrl = updatedDocument.fileUrl after confirming that updatedDocument is not null.
-Removed the unlinkSync which was deleting the file before attempting to rename.
-Added comments for each major step to help anyone reading the code understand what's happening. */
 
 
 /**
@@ -211,11 +218,15 @@ Added comments for each major step to help anyone reading the code understand wh
 router.delete('/delete/:id', async (req, res) =>{
   try{
     const docToDelete = await Document.findById(req.params.id)
-    if(!docToDelete){
-      return res.status(404).json({
-        message: `Document not found`
-      })
+    if (!docToDelete || docToDelete.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Access denied' })
     }
+
+    // if(!docToDelete){
+    //   return res.status(404).json({
+    //     message: `Document not found`
+    //   })
+    //}
     
     log(`Document: ${docToDelete}`)
     const dirCategory = getPrefix(docToDelete)

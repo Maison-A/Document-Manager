@@ -10,28 +10,40 @@
 const express = require('express')
 require('dotenv').config() // access env
 
+// Import the middleware
+const userUtils = require('../utils/userUtils.js')
+
 // initialize helpers
+const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser') // initialize parser
 const cors = require('cors') // initialize CORS (for all routes on Express server)
 const morgan = require('morgan') // initialize morgan logger
 const mongoose = require('mongoose') // initialize mongoose
-const path = require('path');
-const fs = require('fs');
+const path = require('path')
+const fs = require('fs')
 
 // execute express
 const app = express() // set as var
 
 // execute helpers
-app.use(cors()) // execute cors
+app.use(cors(  
+  {
+    //origin: process.env.ORIGIN_URL,  // frontend origin
+    origin: 'http://localhost:8080',
+    credentials: true
+  }
+)) // execute cors
 app.use(morgan('tiny')) // execute morgan
 app.use(cookieParser()) // execute cookieParser
 
+app.use(bodyParser.json()) // execute bodyParser
+app.use(bodyParser.urlencoded({ extended: true })) // execute bodyParser
 // serve files from this path
 // app.use('/static', express.static('../../../Docs'))
 app.use('/Docs', express.static(path.join(__dirname,'../Docs')))
 
 // set connection vars
-const url = process.env.DB_URL || 'mongodb://localhost:27017/pdfStorage'
+// const url = process.env.DB_URL || 'mongodb://localhost:27017/pdfStorage'
 
 // import routes
 const docRoutes = require('./routes/documents/docRoutes.js')
@@ -52,6 +64,6 @@ mongoose.connect('mongodb://localhost:27017/pdfStorage')
     console.log(`failed to connect: ${e}`)
   })
 
-// Define API endpoint
-app.use('/docs', docRoutes)
+// Define API endpoints
+app.use('/docs',userUtils.authenticateJWT, docRoutes)
 app.use('/user', userRoutes)
