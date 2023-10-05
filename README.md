@@ -4,10 +4,10 @@
 This is a web application for managing PDF documents, where registered users can view, add, and delete documents in a communal pool.
 
 ## Technologies Used
-- Node.js
-- Express
 - MongoDB
+- Express
 - Vue.js
+- Node.js
 - JWT for authentication
 
 ## Features
