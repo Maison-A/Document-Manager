@@ -26,11 +26,11 @@ This is a web application for managing PDF documents, where registered users can
 ### Setup
 1. Clone the repository to your local machine.
     ```
-    git clone https://github.com/yourusername/pdf-docs-app.git
+    git clone https://github.com/Maison-A/Document-Manager.git
     ```
 2. Navigate to the project directory.
     ```
-    cd pdf-docs-app
+    cd
     ```
 3. Install the required npm packages.
     ```
@@ -42,7 +42,7 @@ This is a web application for managing PDF documents, where registered users can
     ```
 5. Run the application.
     ```
-    npm start
+    npm run serve
     ```
 
 ## Usage
