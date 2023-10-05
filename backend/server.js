@@ -11,7 +11,7 @@ const express = require('express')
 require('dotenv').config() // access env
 
 // Import the middleware
-const authenticateJWT = require('./middlewares/authenticateJWT')
+const userUtils = require('../utils/userUtils.js')
 
 // initialize helpers
 const bodyParser = require('body-parser')
@@ -19,8 +19,8 @@ const cookieParser = require('cookie-parser') // initialize parser
 const cors = require('cors') // initialize CORS (for all routes on Express server)
 const morgan = require('morgan') // initialize morgan logger
 const mongoose = require('mongoose') // initialize mongoose
-const path = require('path');
-const fs = require('fs');
+const path = require('path')
+const fs = require('fs')
 
 // execute express
 const app = express() // set as var
@@ -63,6 +63,6 @@ mongoose.connect('mongodb://localhost:27017/pdfStorage')
     console.log(`failed to connect: ${e}`)
   })
 
-// Define API endpoint
-app.use('/docs',authenticateJWT, docRoutes)
+// Define API endpoints
+app.use('/docs',userUtils.authenticateJWT, docRoutes)
 app.use('/user', userRoutes)

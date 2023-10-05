@@ -2,7 +2,7 @@
 div.home
   h1(v-if="loggedIn") Welcome, {{user.username}}!
     div.col-md-8.mx-auto.mt-3
-      button.btn.btn-outline-danger(type="button" @click="logout") Logout
+      button.btn.btn-outline-danger(type="button" @click="logoutUser") Logout
   
   div(v-else)
     h3 Log In
@@ -38,18 +38,19 @@ export default {
     })
   },
   methods: {
-    ...mapActions(['logout']),
+    ...mapActions(['logoutUser']),
     
-    login() {
+   async login() {
       this.$refs.loginForm.login()
     }
   },
   created() {
-    this.$store.dispatch('loadUserFromCookie')
-      .catch(error => {
-        console.error('Error loading user from cookie:', error)
-        // Handle the error here, e.g. show an error message to the user
+    if (this.$store.state.user){
+      this.$store.dispatch('fetchUser').catch((e) => {
+        console.error('Error fetching user:', e)
       })
+    }
+
   }
 }
 </script>

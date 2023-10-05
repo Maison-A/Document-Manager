@@ -2,50 +2,38 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const generalUtils = require('../../../utils/generalUtils')
 const UserModel = require('../../models/userModel')
-const authenticateJWT = require('../../middlewares/authenticateJWT')
-const generateSecretKey = require('../../middlewares/generateSecretKey')
+const userUtils = require('../../../utils/userUtils')
 const router = express.Router()
 
 router.use(bodyParser.json())
 
-// Use the middleware on specific routes where needed
-// router.use(authenticateJWT)  
-
 router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body //
-    const user = await UserModel.findOne({ email })
-    
-    if (!user) { // check if user exists
-      return res.status(401).json({ message: 'Email not found' })
-    }
-    
-    const isPasswordValid = await bcrypt.compare(password, user.password)
-    if (!isPasswordValid) {
-      return res.status(401).send('Invalid password')
-    }
-    else if (isPasswordValid) {
-      const safeUser = { ...user._doc } // create new user object without password - safer to send to client
-      delete safeUser.password
-    }
-    
-    const secretKey = process.env.JWT_SECRET
-    const token = jwt.sign({ id: user.id, email }, secretKey, { expiresIn: '1h' })
-    
-    
-    
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict'
-    })
-    
-    return res.json({ token, user: safeUser })
-     
-  }catch (e) {
-      return res.status(500).json({ message: 'Internal Server Error' })
+  const { email, password } = req.body
+  const user = await UserModel.findOne({ email })
+  
+  if (!user) {
+    return res.status(401).json({ message: 'Email not found' })
   }
+  
+  const isPasswordValid = await bcrypt.compare(password, user.password)
+  if (!isPasswordValid) {
+    return res.status(401).send('Invalid password')
+  }
+  
+  const safeUser = { ...user._doc }
+  delete safeUser.password
+  
+  const token = userUtils.generateJWT(user)
+  
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict'
+  })
+  
+  return res.status(200).json({ message: 'Login successful',user: safeUser, token: token  })
 })
 
 router.post('/signup', async (req, res) => {
@@ -67,7 +55,8 @@ router.post('/signup', async (req, res) => {
     }) 
     
     await newUser.save()
-    const token = jwt.sign({ id: newUser._id, email }, 'yourSecretKey', { expiresIn: '1h' })
+    const secretKey = process.env.JWT_SECRET
+    const token = jwt.sign({ id: newUser._id, email }, secretKey, { expiresIn: '1h' })
     
     return res.status(201).json({ token, message: 'User created successfully' })
   }catch (e) {
@@ -77,24 +66,13 @@ router.post('/signup', async (req, res) => {
 })
 
 
-router.post('/logout', async (req, res) => {
-  try {
-    // Clear the user session
-    req.session.destroy((error) => {
-      if (error) {
-        console.error(error)
-        res.status(500).send('Internal Server Error')
-      } else {
-        res.status(200).send('Logged out successfully')
-      }
-    })
-  } catch (error) {
-    console.error(error)
-    res.status(500).send('Internal Server Error')
-  }
+router.post('/logout', (req, res) => {
+  res.clearCookie('token')
+  return res.status(200).send('Logged out successfully')
 })
 
-router.get('/user', async (req, res) => {
+// this route should display "other" users
+router.get('/:id', userUtils.authenticateJWT, async (req, res) =>  {
   try {
     const token = req.cookies['token']
     if (!token) {
@@ -115,6 +93,23 @@ router.get('/user', async (req, res) => {
     return res.status(500).json({ message: 'Internal Server Error' })
   }
 })
+
+// New GET route to get currrent user's info
+router.get('/me', userUtils.authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user.id;  // Assuming authenticateJWT middleware sets req.user
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const safeUser = { ...user._doc };
+    delete safeUser.password;
+    return res.status(200).json(safeUser);
+  } catch (e) {
+    generalUtils.log(e)
+    return res.status(500).json({ message: 'Internal Server Error' })
+  }
+});
 
 
 module.exports = router

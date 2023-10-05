@@ -1,12 +1,17 @@
 import { createStore } from 'vuex'
+import Cookies from 'js-cookie'
 const { log } = require('../../../utils/generalUtils')
 const axios = require('axios')
 axios.defaults.baseURL = 'http://localhost:3000/'
 axios.defaults.withCredentials = true
 
 
+// axios.interceptors.request.use(config => {
+//   config.headers.Authorization = `Bearer ${localStorage.getItem('authToken')}`
+//   return config
+// })
 axios.interceptors.request.use(config => {
-  config.headers.Authorization = `Bearer ${localStorage.getItem('authToken')}`
+  // No need to set Authorization header, cookie will be sent automatically
   return config
 })
 
@@ -92,16 +97,12 @@ export default createStore({
       state.loggedIn = loggedIn
     },
     
+    // Mutation to clear user info - DO NOT use async in mutations
     logoutUser(state) {
-      state.user = null
+      state.user = null // reset user state
       document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' // clear user cookie
-      axios.post('/user/logout') // Replace with your actual API endpoint to clear the server-side session
-        .then(() => {
-          state.loggedIn = false
-        })
-        .catch((error) => {
-          console.error(error)
-        });
+      state.loggedIn = false // reset loggedIn state
+      // need to clear token from cookie/session (is there a difference?)
     },
   },
   
@@ -250,19 +251,29 @@ export default createStore({
     async loginUser({ commit }, payload) {
       try {
         const res = await axios.post('/user/login', payload)
-        if (res.data.token) {
-          const { token, user } = res.data
-          commit('setUser', user) // Set the whole user object
-          // log(`Logged in as [username]: ${user.username}`) // debug
+        if (res.data.user) {
+          const { user } = res.data
+          commit('setUser', user) 
           commit('setLoggedIn', true)
-          localStorage.setItem('authToken', token)
+          log(`username in state: ${this.state.user.username}`)
+          log(`email in state: ${this.state.user.email}`)
+          
         }
       } catch (e) {
         console.log(`>>ERROR in loginUser ${e}<<`)
       }
     },
       
-      
+    // Action to handle user logout
+    async logoutUser({ commit }) {
+      try {
+        await axios.post('/user/logout') // This should clear the server-side cookie
+        commit('logoutUser')
+      } catch (error) {
+        console.error('Failed to logout:', error)
+      }
+    },
+
       
     /**
      * Name: createUser
@@ -277,7 +288,7 @@ export default createStore({
         if(res.data.token){
           commit('setAuthToken', res.data.token)
           commit('setUser', payload.email)
-          localStorage.setItem('authToken', res.data.token)
+          // localStorage.setItem('authToken', res.data.token)
         }
         else {
           log('>>WARNING: Token not received<<')
@@ -288,6 +299,15 @@ export default createStore({
     },
     
     
+    async fetchUser({ commit }) {
+      try {
+        const response = await axios.get('/user/me')
+        commit('setUser', response.data)
+      } catch (error) {
+        console.error('Failed to fetch user:', error)
+      }
+    },
+
 
     /**
      * Loads the user data from the server using the token stored in the cookie.
@@ -298,25 +318,28 @@ export default createStore({
      */
     async loadUserFromCookie({ commit }) {
       const token = Cookies.get('token') // Get the token from the cookie
+      log(`loadUserFromCookie() token: ${token}`)
       if (!token) {
         return Promise.reject(new Error('No token found in cookie')) // If the token is not found, reject the Promise with an error
       }
+      
       try {
-        const response = await axios.get('/user/:id', { // Send a GET request to the server to get the user data
+        const response = await axios.get('/user/me', { // Send a GET request to the server to get the user data
           headers: { Authorization: `Bearer ${token}` }
         })
         const user = response.data
-        commit('setUser', user) // Update the user state with the loaded user data
-        return Promise.resolve(user) // Resolve the Promise with the loaded user data
-      } catch (error) {
-        if (error.response && error.response.status === 401) { // If the server responds with a 401 status code, the token is invalid or expired
-          // Remove the token from the cookie and set the user to null
-          Cookies.remove('token')
+        commit('setUser', user) // update the user state with the loaded user data
+        
+        return Promise.resolve(user) // resolve the Promise with the loaded user data
+      } catch (e) {
+        if (e.response && e.response.status === 401) { // if the server responds with a 401 status code, the token is invalid or expired
+          
+          Cookies.remove('token') // remove the token from the cookie and set the user to null
           commit('setUser', null)
+          
           return Promise.reject(new Error('Token is invalid or expired')) // reject the Promise with an error
         } else {
-          
-          return Promise.reject(error) // If an error occurs while loading the user data, reject the Promise with the error
+          return Promise.reject(e) // if an error occurs while loading the user data, reject the Promise with the error
         }
       }
     }
@@ -325,22 +348,4 @@ export default createStore({
   
   modules: {
   },
-
-// initialize the user state from the cookie
-// handle the error if the cookie is empty or invalid
-// set the loggedIn state based on the user state
-// use a try-catch block to handle the JSON.parse error
-async init({ commit }) {
-  try {
-    const userCookie = document.cookie.replace(/(?:(?:^|.*;\s*)user\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-    if (userCookie) {
-      const user = JSON.parse(userCookie);
-      commit('setUser', user);
-    }
-  } catch (error) {
-    console.error(error);
-  } finally {
-    commit('setLoggedIn', !!state.user);
-  }
-}
 })

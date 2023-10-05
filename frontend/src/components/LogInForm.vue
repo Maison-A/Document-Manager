@@ -16,7 +16,7 @@ div.container
 </template>
 
 <script>
-import { useStore } from 'vuex'
+import { mapActions } from 'vuex'
 
 export default {
   data() {
@@ -26,6 +26,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['loginUser']),
     login() {
       const payload = {
         email: this.email,
