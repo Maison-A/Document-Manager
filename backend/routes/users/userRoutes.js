@@ -6,7 +6,10 @@ const generalUtils = require('../../../utils/generalUtils')
 const UserModel = require('../../models/userModel')
 const userUtils = require('../../../utils/userUtils')
 const router = express.Router()
+const cookieParser = require('cookie-parser')
 
+
+router.use(cookieParser())
 router.use(bodyParser.json())
 
 router.post('/login', async (req, res) => {
@@ -97,19 +100,17 @@ router.get('/:id', userUtils.authenticateJWT, async (req, res) =>  {
 // New GET route to get currrent user's info
 router.get('/me', userUtils.authenticateJWT, async (req, res) => {
   try {
-    const userId = req.user.id;  // Assuming authenticateJWT middleware sets req.user
-    const user = await UserModel.findById(userId);
+    const userId = req.user.id  // Assuming authenticateJWT middleware sets req.user
+    const user = await UserModel.findById(userId)
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User not found' })
     }
-    const safeUser = { ...user._doc };
-    delete safeUser.password;
-    return res.status(200).json(safeUser);
+    const safeUser = { ...user._doc }
+    delete safeUser.password
+    return res.status(200).json(safeUser)
   } catch (e) {
     generalUtils.log(e)
     return res.status(500).json({ message: 'Internal Server Error' })
   }
-});
-
-
+})
 module.exports = router

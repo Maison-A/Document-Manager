@@ -301,7 +301,10 @@ export default createStore({
     
     async fetchUser({ commit }) {
       try {
-        const response = await axios.get('/user/me')
+        const config = {
+          withCredentials: true
+        }
+        const response = await axios.get('/user/me', config)
         commit('setUser', response.data)
       } catch (error) {
         console.error('Failed to fetch user:', error)

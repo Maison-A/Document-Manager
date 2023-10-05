@@ -28,7 +28,8 @@ const app = express() // set as var
 // execute helpers
 app.use(cors(  
   {
-    origin: 'http://localhost:8080',  // frontend origin
+    //origin: process.env.ORIGIN_URL,  // frontend origin
+    origin: 'http://localhost:8080',
     credentials: true
   }
 )) // execute cors
