@@ -28,5 +28,5 @@ function authenticateJWT(req, res, next) {
 module.exports = {
   generateJWT,
   authenticateJWT,
-  generateSecretKey
+  // generateSecretKey
 }

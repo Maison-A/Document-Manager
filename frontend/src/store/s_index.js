@@ -257,6 +257,7 @@ export default createStore({
           commit('setLoggedIn', true)
           log(`username in state: ${this.state.user.username}`)
           log(`email in state: ${this.state.user.email}`)
+          log(`loggedIn in state: ${this.state.loggedIn}`)
           
         }
       } catch (e) {

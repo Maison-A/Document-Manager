@@ -81,6 +81,11 @@ export default {
         throw e
       }
     },
+    mounted() {
+      if (this.isUserLoggedIn) {  // Replace this with your logic to check if a user is logged in
+        this.fetchAllDocuments()
+      }
+}
 },
     
     watch: {
