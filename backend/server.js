@@ -38,9 +38,7 @@ app.use(cookieParser()) // execute cookieParser
 
 app.use(bodyParser.json()) // execute bodyParser
 app.use(bodyParser.urlencoded({ extended: true })) // execute bodyParser
-// serve files from this path
-// app.use('/static', express.static('../../../Docs'))
-app.use('/Docs', express.static(path.join(__dirname,'../Docs')))
+app.use('/Docs', express.static(path.join(__dirname,'../Docs'))) // serve files from this path
 
 // set connection vars
 // const url = process.env.DB_URL || 'mongodb://localhost:27017/pdfStorage'

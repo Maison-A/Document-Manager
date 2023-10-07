@@ -89,7 +89,7 @@ router.get('/all', async (req, res) => {
     const allCsvData = [...sdCsvData, ...sigCsvData]
     const documentPaths = allCsvData.map((row) => row.relativePath)
     const matchingDocuments = await Document.find({ 
-      userId: req.user.id,
+      // userId: req.user.id,
       fileUrl: { $in: documentPaths } 
     })
 
