@@ -6,10 +6,6 @@ axios.defaults.baseURL = 'http://localhost:3000/'
 axios.defaults.withCredentials = true
 
 
-// axios.interceptors.request.use(config => {
-//   config.headers.Authorization = `Bearer ${localStorage.getItem('authToken')}`
-//   return config
-// })
 axios.interceptors.request.use(config => {
   // No need to set Authorization header, cookie will be sent automatically
   return config
@@ -258,7 +254,6 @@ export default createStore({
           log(`username in state: ${this.state.user.username}`)
           log(`email in state: ${this.state.user.email}`)
           log(`loggedIn in state: ${this.state.loggedIn}`)
-          
         }
       } catch (e) {
         console.log(`>>ERROR in loginUser ${e}<<`)
