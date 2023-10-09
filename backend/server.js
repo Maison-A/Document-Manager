@@ -28,8 +28,8 @@ const app = express() // set as var
 // execute helpers
 app.use(cors(  
   {
-    //origin: process.env.ORIGIN_URL,  // frontend origin
-    origin: 'http://localhost:8080',
+    origin: process.env.ORIGIN_URL,  // frontend origin
+    // origin: 'http://localhost:8080',
     credentials: true
   }
 )) // execute cors
@@ -41,7 +41,7 @@ app.use(bodyParser.urlencoded({ extended: true })) // execute bodyParser
 app.use('/Docs', express.static(path.join(__dirname,'../Docs'))) // serve files from this path
 
 // set connection vars
-// const url = process.env.DB_URL || 'mongodb://localhost:27017/pdfStorage'
+const url = process.env.DB_URL || 'mongodb://localhost:27017/pdfStorage'
 
 // import routes
 const docRoutes = require('./routes/documents/docRoutes.js')
@@ -49,8 +49,8 @@ const userRoutes = require('./routes/users/userRoutes.js')
 /**
  * CONNECT TO MONGO DB via MONGOOSE
 */
-// mongoose.connect(url)
-mongoose.connect('mongodb://localhost:27017/pdfStorage')
+mongoose.connect(url)
+// mongoose.connect('mongodb://localhost:27017/pdfStorage')
   .then(()=>{
     console.log("connection is now open")
     // start express server & listen for requests
