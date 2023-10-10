@@ -93,6 +93,9 @@ export default createStore({
       state.loggedIn = loggedIn
     },
     
+    setAuthToken(state, token){
+      state.authToken = token
+    },
     // Mutation to clear user info - DO NOT use async in mutations
     logoutUser(state) {
       state.user = null // reset user state
@@ -284,7 +287,8 @@ export default createStore({
         if(res.data.token){
           commit('setAuthToken', res.data.token)
           commit('setUser', payload.email)
-          // localStorage.setItem('authToken', res.data.token)
+          commit('setLoggedIn', true)
+          $for('#signupModal').modal('hide')
         }
         else {
           log('>>WARNING: Token not received<<')

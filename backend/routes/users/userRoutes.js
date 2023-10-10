@@ -2,12 +2,11 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const generalUtils = require('../../../utils/generalUtils')
+const utils = require('../../../utils/generalUtils')
 const UserModel = require('../../models/userModel')
 const userUtils = require('../../../utils/userUtils')
 const router = express.Router()
 const cookieParser = require('cookie-parser')
-
 
 router.use(cookieParser())
 router.use(bodyParser.json())
@@ -36,7 +35,7 @@ router.post('/login', async (req, res) => {
     sameSite: 'strict'
   })
   
-  return res.status(200).json({ message: 'Login successful',user: safeUser, token: token  })
+  return res.status(200).json({ message: 'Login successful',user: safeUser, token: token})
 })
 
 router.post('/signup', async (req, res) => {
@@ -47,10 +46,11 @@ router.post('/signup', async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: 'Email already exists' })
     }
-
+    
     const saltRounds = 10
     const hashedPassword = await bcrypt.hash(password, saltRounds)
-
+    utils.log(`Hashed password: ${hashedPassword}`)
+    
     const newUser = new UserModel({
       email,
       password: hashedPassword,
@@ -58,10 +58,15 @@ router.post('/signup', async (req, res) => {
     }) 
     
     await newUser.save()
-    const secretKey = process.env.JWT_SECRET
-    const token = jwt.sign({ id: newUser._id, email }, secretKey, { expiresIn: '1h' })
+    utils.log(`New user created: ${newUser}`)
+    // const secretKey = process.env.JWT_SECRET
+    // const token = jwt.sign({ id: newUser._id, email }, secretKey, { expiresIn: '1h' })
+    const token = userUtils.generateJWT(newUser) // create a token with user's info
     
-    return res.status(201).json({ token, message: 'User created successfully' })
+    const safeUser = { ...newUser._doc }
+    delete safeUser.password
+    
+    return res.status(201).json({ message: 'User created successfully', user: safeUser, token: token})
   }catch (e) {
     return res.status(500).json({ message: '>>>ERROR in /signup post request<<<' })
   }
@@ -109,7 +114,7 @@ router.get('/me', userUtils.authenticateJWT, async (req, res) => {
     delete safeUser.password
     return res.status(200).json(safeUser)
   } catch (e) {
-    generalUtils.log(e)
+    utils.log(e)
     return res.status(500).json({ message: 'Internal Server Error' })
   }
 })
