@@ -43,10 +43,17 @@ router.post('/signup', async (req, res) => {
     const { email, password, username } = req.body
     const existingUser = await UserModel.findOne({ email })
   
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email already exists' })
+    if (existingUser) { // check if any properties of any potential existing user are being reused and alert if so
+      if (existingUser.email === email) {
+        alert('Email already exists')
+        return res.status(400).json({ message: 'Email already exists' })
+      }
+      else if (existingUser.username === username) {
+      alert('Username already exists')
+      return res.status(400).json({ message: 'Username already exists' })
     }
-    
+    }
+    // refactor to instead call a function that encapsulates the hashing process
     const saltRounds = 10
     const hashedPassword = await bcrypt.hash(password, saltRounds)
     utils.log(`Hashed password: ${hashedPassword}`)

@@ -57,3 +57,5 @@ mongoose.connect('mongodb://localhost:27017/pdfStorage')
 // Define API endpoints
 app.use('/docs',userUtils.authenticateJWT, docRoutes)
 app.use('/user', userRoutes)
+
+module.exports = app

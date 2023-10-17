@@ -1,5 +1,6 @@
 import { createStore } from 'vuex'
 import Cookies from 'js-cookie'
+import router from '@/router/r_index'
 const { log } = require('../../../utils/generalUtils')
 const axios = require('axios')
 axios.defaults.baseURL = 'http://localhost:3000/'
@@ -102,6 +103,12 @@ export default createStore({
       document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' // clear user cookie
       state.loggedIn = false // reset loggedIn state
       // need to clear token from cookie/session (is there a difference?)
+    },
+    loginCreatedUser(state, { user, token }) {
+      state.user = user
+      state.loggedIn = true
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      document.cookie = `token=${token}`
     },
   },
   
@@ -284,17 +291,12 @@ export default createStore({
     async createUser({ commit }, payload) {
       try{
         const res = await axios.post('/user/signup', payload)
-        if(res.data.token){
-          commit('setAuthToken', res.data.token)
-          commit('setUser', payload.email)
-          commit('setLoggedIn', true)
-          $for('#signupModal').modal('hide')
-        }
-        else {
-          log('>>WARNING: Token not received<<')
-        }
+        const { user, token } = res.data
+        commit('loginCreatedUser', { user, token })
+        router.push('/home')
+        commit('toggleModal', false)
       } catch(e){
-        log(`>>ERROR in createUser ${e}<<`)
+        log(`>>ERROR in FRONTEND 'createUser': ${e}<<`)
       }
     },
     

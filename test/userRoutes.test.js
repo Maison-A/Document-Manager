@@ -1,8 +1,7 @@
 const assert = require('assert')
 const request = require('supertest')
 // const app = require('../frontend/src/app.vue')
-const express = require('express')
-const app = express()
+const app = require('../backend/server.js')
 const UserModel = require('../backend/models/userModel')
 
 describe('User Routes', () => {
@@ -33,10 +32,10 @@ describe('User Routes', () => {
   //   })
   // })
 
-  describe('POST /signup', () => {
+  describe('POST user/signup', () => {
     it('should create a new user and return a JWT token', async () => {
       const response = await request(app)
-        .post('/signup')
+        .post('user/signup')
         .send({
           email: 'newuser@example.com',
           password: 'password123',
@@ -60,7 +59,7 @@ describe('User Routes', () => {
       await user.save()
 
       const response = await request(app)
-        .post('/signup')
+        .post('user/signup')
         .send({
           email: 'existinguser@example.com',
           password: 'password123',
