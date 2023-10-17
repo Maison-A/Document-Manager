@@ -97,6 +97,7 @@ export default createStore({
     setAuthToken(state, token){
       state.authToken = token
     },
+    
     // Mutation to clear user info - DO NOT use async in mutations
     logoutUser(state) {
       state.user = null // reset user state
@@ -104,12 +105,14 @@ export default createStore({
       state.loggedIn = false // reset loggedIn state
       // need to clear token from cookie/session (is there a difference?)
     },
-    loginCreatedUser(state, { user, token }) {
-      state.user = user
-      state.loggedIn = true
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      document.cookie = `token=${token}`
-    },
+    
+    // loginUser(state, { user, token }) {
+    //   state.user = user
+    //   state.loggedIn = true
+    //   state.authToken = token
+    //   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    //   document.cookie = `token=${token}`
+    // },
   },
   
   actions: {
@@ -261,6 +264,7 @@ export default createStore({
           const { user } = res.data
           commit('setUser', user) 
           commit('setLoggedIn', true)
+          
           log(`username in state: ${this.state.user.username}`)
           log(`email in state: ${this.state.user.email}`)
           log(`loggedIn in state: ${this.state.loggedIn}`)
@@ -292,14 +296,15 @@ export default createStore({
       try{
         const res = await axios.post('/user/signup', payload)
         const { user, token } = res.data
-        commit('loginCreatedUser', { user, token })
-        router.push('/home')
-        commit('toggleModal', false)
+        commit('setUser', user)
+        commit('setLoggedIn', true)
+        commit('loginUser', { user, token }) // log in user after creating account
+        // router.push('/')
       } catch(e){
         log(`>>ERROR in FRONTEND 'createUser': ${e}<<`)
       }
     },
-    
+    // debug: I click sign up, token is generated, modal closes, 
     
     async fetchUser({ commit }) {
       try {

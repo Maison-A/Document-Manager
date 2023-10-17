@@ -45,11 +45,11 @@ router.post('/signup', async (req, res) => {
   
     if (existingUser) { // check if any properties of any potential existing user are being reused and alert if so
       if (existingUser.email === email) {
-        alert('Email already exists')
+        // alert('Email already exists')
         return res.status(400).json({ message: 'Email already exists' })
       }
       else if (existingUser.username === username) {
-      alert('Username already exists')
+      //alert('Username already exists')
       return res.status(400).json({ message: 'Username already exists' })
     }
     }

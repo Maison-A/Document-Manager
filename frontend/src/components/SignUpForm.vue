@@ -25,12 +25,17 @@ export default {
   },
   methods: {
     createUser() {
-      const payload = {
-        email: this.email,
-        password: this.password,
-        username: this.username
+      try {
+        const payload = {
+          email: this.email,
+          password: this.password,
+          username: this.username
+        }
+        this.$emit('closeModal')
+        this.$store.dispatch('createUser', payload)
+      } catch (e) {
+        console.log(e)
       }
-      this.$store.dispatch('createUser', payload)
     }
   }
 }
