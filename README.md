@@ -1,5 +1,6 @@
 # PDF Document Management App (WIP)
-
+#### I started tracking with waka late into the project but this is where I picked up
+[![wakatime](https://wakatime.com/badge/user/018b3fbf-ec02-4388-be52-99aeb79c0bd8/project/018b3fc2-868f-48d7-b17a-a63f1f1c1767.svg)](https://wakatime.com/badge/user/018b3fbf-ec02-4388-be52-99aeb79c0bd8/project/018b3fc2-868f-48d7-b17a-a63f1f1c1767)
 ## Overview
 This is a web application for managing PDF documents, where registered users can view, add, and delete documents in a communal pool.
 
