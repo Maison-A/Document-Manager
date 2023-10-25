@@ -1,15 +1,12 @@
 import { createStore } from 'vuex'
 import Cookies from 'js-cookie'
+import router from '@/router/r_index'
 const { log } = require('../../../utils/generalUtils')
 const axios = require('axios')
 axios.defaults.baseURL = 'http://localhost:3000/'
 axios.defaults.withCredentials = true
 
 
-// axios.interceptors.request.use(config => {
-//   config.headers.Authorization = `Bearer ${localStorage.getItem('authToken')}`
-//   return config
-// })
 axios.interceptors.request.use(config => {
   // No need to set Authorization header, cookie will be sent automatically
   return config
@@ -31,6 +28,7 @@ export default createStore({
   state: {
     documents: [],
     showModal: false,
+    showSignUpModal: false,
     pdfSrc: '',
     categories: ['signatures', 'supporting documents'],
     currentDocument:{},
@@ -69,6 +67,9 @@ export default createStore({
       state.showModal = payload
     },
     
+    toggleSignUpModal(state, payload){
+      state.showSignUpModal = payload
+    },
     setPdfSrc(state, url){
       state.pdfSrc = url
       console.log(`pdfSrc in mutation: ${state.pdfSrc}`)
@@ -97,6 +98,10 @@ export default createStore({
       state.loggedIn = loggedIn
     },
     
+    setAuthToken(state, token){
+      state.authToken = token
+    },
+    
     // Mutation to clear user info - DO NOT use async in mutations
     logoutUser(state) {
       state.user = null // reset user state
@@ -104,9 +109,29 @@ export default createStore({
       state.loggedIn = false // reset loggedIn state
       // need to clear token from cookie/session (is there a difference?)
     },
+    // loginUser(state, { user, token }) {
+    //   state.user = user
+    //   state.loggedIn = true
+    //   state.authToken = token
+    // },
+    
+    loginUser(state, { user, token }) {
+      state.user = user
+      state.loggedIn = true
+      state.authToken = token
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      document.cookie = `token=${token}`
+    },
   },
   
   actions: {
+    
+    // async setAuthHeadersAndCookies({ commit }, { token }) {
+    //   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    //   document.cookie = `token=${token}`
+    // },
+    
+    
     /**
      * Name: fetchAllDocuments
      * Desc: 
@@ -227,7 +252,9 @@ export default createStore({
       commit('toggleModal', payload)
     },
     
-      
+    toggleSignUpModal({commit}, payload){
+      commit('toggleSignUpModal', payload)
+    },
       
     /**
      * Name: 
@@ -239,7 +266,12 @@ export default createStore({
       commit('setPdfSrc', payload)
     },
   
-      
+    // async loginUser({ commit, dispatch }, payload) {
+    //   // ... your login logic here
+    //   commit('loginUser', payload)
+    //   dispatch('setAuthHeadersAndCookies', payload)
+    // }
+    
       
     /**
      * Name: loginUser
@@ -255,10 +287,10 @@ export default createStore({
           const { user } = res.data
           commit('setUser', user) 
           commit('setLoggedIn', true)
+          
           log(`username in state: ${this.state.user.username}`)
           log(`email in state: ${this.state.user.email}`)
           log(`loggedIn in state: ${this.state.loggedIn}`)
-          
         }
       } catch (e) {
         console.log(`>>ERROR in loginUser ${e}<<`)
@@ -286,19 +318,16 @@ export default createStore({
     async createUser({ commit }, payload) {
       try{
         const res = await axios.post('/user/signup', payload)
-        if(res.data.token){
-          commit('setAuthToken', res.data.token)
-          commit('setUser', payload.email)
-          // localStorage.setItem('authToken', res.data.token)
-        }
-        else {
-          log('>>WARNING: Token not received<<')
-        }
+        const { user, token } = res.data
+        commit('setUser', user)
+        commit('setLoggedIn', true)
+        commit('loginUser', { user, token }) // log in user after creating account
+        router.push('/')
       } catch(e){
-        log(`>>ERROR in createUser ${e}<<`)
+        log(`>>ERROR in FRONTEND 'createUser': ${e}<<`)
       }
     },
-    
+    // debug: I click sign up, token is generated, modal closes, 
     
     async fetchUser({ commit }) {
       try {

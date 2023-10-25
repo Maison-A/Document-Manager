@@ -10,19 +10,10 @@ div.modal.fade.show.d-block(
     div.modal-dialog.modal-lg.border.border.primary.rounded(role='document')
         div.modal-content
             h5.modal-title.m-3(id='docDisplayLabel') {{ currentTitle }}
-                button(
-                    type='button'
-                    class='close'
-                    @click='closeModal'
-                    aria-label='Close'
-                )
+                button(type='button' class='close' @click='closeModal' aria-label='Close')
                     span(aria-hidden='true') &times;
             div.modal-body
-                vue-pdf-embed(
-                    :source="pdfSrc"
-                    width="600"
-                    height="500"
-                )
+                vue-pdf-embed(:source="pdfSrc" width="600" height="500")
             div.modal-footer
             form    
                 div.row.mb-3
@@ -57,16 +48,20 @@ div.modal.fade.show.d-block(
 import VuePdfEmbed from 'vue-pdf-embed'
 
 export default {
-    name: 'DocumentPopout',
-    props: {
-        documentId:{
-            type: String,
-            default: 'no-document-id-passed'
-        },
+    name: 'DocumentPopout',        
+    created() {
+        console.log(`> Document Popout - Doc on Created(): ${JSON.stringify(this.$store.getters.getCurrentDocument, null, 2)} <`)
+        
+        if(this.documentId && this.documentId !== 'no-document-id-passed'){
+            console.log(`> Document Popout - Document ID on creation: ${this.documentId} <`) // debug
+            console.log(`> Document Popout - Current Document on creation fetch: ${this.$store.getters.getCurrentDocument} <`) // debug
+            
+            this.updateData.title = this.currentDocument?.title || ''
+            this.updateData.description = this.currentDocument?.description || ''
+            
+            this.isDataLoaded = true  // set isDataLoaded to true once data is fetched
+        }
     },
-    components:{ 
-        VuePdfEmbed,
-     },
     
     data() {
         return {
@@ -77,6 +72,17 @@ export default {
             isDataLoaded: false,
         }
     },
+    
+    props: {
+        documentId:{
+            type: String,
+            default: 'no-document-id-passed'
+        },
+    },
+    
+    components:{ 
+        VuePdfEmbed,
+     },
 
     computed: {
         showModal(){
@@ -126,20 +132,6 @@ export default {
             }
         },
     },
-    created() {
-        console.log(`> Document Popout - Doc on Created(): ${JSON.stringify(this.$store.getters.getCurrentDocument, null, 2)} <`)
-        
-        if(this.documentId && this.documentId !== 'no-document-id-passed'){
-            console.log(`> Document Popout - Document ID on creation: ${this.documentId} <`) // debug
-            console.log(`> Document Popout - Current Document on creation fetch: ${this.$store.getters.getCurrentDocument} <`) // debug
-            
-            this.updateData.title = this.currentDocument?.title || ''
-            this.updateData.description = this.currentDocument?.description || ''
-            
-            this.isDataLoaded = true  // set isDataLoaded to true once data is fetched
-        }
-    },
-
 }
 </script>
 

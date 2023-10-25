@@ -27,13 +27,18 @@ div
 <script>
 export default {
   name: 'UpdateForm',
-  props: ['currentDocument'],
+  props: {
+    currentDocument: {
+      type: Object,
+    },
+  },
   data() {
     return {
       updateData: {
         title: '',
         description: ''
-      }
+      },
+      newValue: ''
     }
   },
   computed:{
@@ -46,15 +51,17 @@ export default {
   },
   watch: {
     currentDocument: {
-      handler(newValue) {
-        if(newValue) {
+      handler(newValue) { // watch for changes to currentDocument prop
+        if (newValue && newValue.title) {
           this.updateData.title = newValue.title
+        }
+        if (newValue && newValue.description) {
           this.updateData.description = newValue.description
         }
-      },
-      deep: true,
-      immediate: true
-    }
+      }
+    },
+    deep: true,
+    immediate: true
   },
   methods: {
     updateDocument() {
