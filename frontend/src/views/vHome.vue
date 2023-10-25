@@ -8,16 +8,9 @@ div.home
     h3 Log In
     LogInForm(ref="loginForm")
     div.col-md-8.mx-auto.mt-3
-      button.btn.btn-primary.me-3(type="button" data-bs-toggle="modal" data-bs-target="#signUpModal") Sign Up
+      button.btn.btn-primary.me-3(type="button" @click="toggleSignUpModal") Sign Up
       button.btn.btn-primary(type="button" @click="login") Login
-    div.modal.fade(tabindex="-1" id="signUpModal")
-      div.modal-dialog
-        div.modal-content
-          div.modal-header
-            h5.modal-title Sign Up
-            button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
-          div.modal-body
-            SignUpForm
+      SignUpForm.modal-fade(role="dialog")
 </template>
   
 <script>
@@ -38,10 +31,11 @@ export default {
     })
   },
   methods: {
-    ...mapActions(['logoutUser']),
-    
-   async login() {
-      this.$refs.loginForm.login()
+    ...mapActions([
+      'logoutUser',
+    'toggleSignUpModal']),
+    async login() {
+        this.$refs.loginForm.login()
     }
   },
   created() {
@@ -53,5 +47,4 @@ export default {
 
   }
 }
-</script>
-  
+</script> 

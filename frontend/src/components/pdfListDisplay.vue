@@ -1,7 +1,3 @@
-<!-- 
- * Title: PdfListDisplay.vue
- * Description:
--->
 <template lang="pug">
 div
   div(v-if='documents && documents.length > 0')

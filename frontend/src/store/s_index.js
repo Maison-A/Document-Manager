@@ -28,6 +28,7 @@ export default createStore({
   state: {
     documents: [],
     showModal: false,
+    showSignUpModal: false,
     pdfSrc: '',
     categories: ['signatures', 'supporting documents'],
     currentDocument:{},
@@ -66,6 +67,9 @@ export default createStore({
       state.showModal = payload
     },
     
+    toggleSignUpModal(state, payload){
+      state.showSignUpModal = payload
+    },
     setPdfSrc(state, url){
       state.pdfSrc = url
       console.log(`pdfSrc in mutation: ${state.pdfSrc}`)
@@ -105,17 +109,29 @@ export default createStore({
       state.loggedIn = false // reset loggedIn state
       // need to clear token from cookie/session (is there a difference?)
     },
-    
     // loginUser(state, { user, token }) {
     //   state.user = user
     //   state.loggedIn = true
     //   state.authToken = token
-    //   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-    //   document.cookie = `token=${token}`
     // },
+    
+    loginUser(state, { user, token }) {
+      state.user = user
+      state.loggedIn = true
+      state.authToken = token
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      document.cookie = `token=${token}`
+    },
   },
   
   actions: {
+    
+    // async setAuthHeadersAndCookies({ commit }, { token }) {
+    //   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    //   document.cookie = `token=${token}`
+    // },
+    
+    
     /**
      * Name: fetchAllDocuments
      * Desc: 
@@ -236,7 +252,9 @@ export default createStore({
       commit('toggleModal', payload)
     },
     
-      
+    toggleSignUpModal({commit}, payload){
+      commit('toggleSignUpModal', payload)
+    },
       
     /**
      * Name: 
@@ -248,7 +266,12 @@ export default createStore({
       commit('setPdfSrc', payload)
     },
   
-      
+    // async loginUser({ commit, dispatch }, payload) {
+    //   // ... your login logic here
+    //   commit('loginUser', payload)
+    //   dispatch('setAuthHeadersAndCookies', payload)
+    // }
+    
       
     /**
      * Name: loginUser
@@ -299,7 +322,7 @@ export default createStore({
         commit('setUser', user)
         commit('setLoggedIn', true)
         commit('loginUser', { user, token }) // log in user after creating account
-        // router.push('/')
+        router.push('/')
       } catch(e){
         log(`>>ERROR in FRONTEND 'createUser': ${e}<<`)
       }
