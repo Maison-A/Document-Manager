@@ -40,11 +40,22 @@ This is a web application for managing PDF documents, where registered users can
     ```
     touch .env
     ```
-5. Run the application.
+5. cd into the frontend (location of main)
+    ```
+    cd frontend
+    ```
+6. Run the application frontend.
     ```
     npm run serve
     ```
-
+7. cd into backend (you can open a new terminal)
+    ```
+    cd backend
+    ```
+8. start port listening
+    ```
+    node server.js
+    ```
 ## Usage
 1. Users need to register and log in to access the communal document pool.
 2. Upon successful login, a list of available PDF documents will be displayed.
